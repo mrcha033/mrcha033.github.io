@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://mrcha033.github.io/sitemap.xml
