@@ -198,50 +198,65 @@ p, li, dd { text-wrap: pretty; }
 .nav-links .contact-nav { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--accent); }
 .menu-toggle { display: none; }
 
-/* Home: hero */
+/* Home: the hero and the story of Fig. 1.
+   The figure stays pinned beside the hero and the four layer descriptions that follow it. app.js
+   marks the description being read with data-step on .story, and the figure focuses that layer. */
 
-.hero {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
-  align-items: center;
-  gap: var(--space-7);
-  min-height: min(44rem, calc(100svh - var(--header-h)));
-  padding-block: var(--space-7) var(--space-8);
-}
+.story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); column-gap: var(--space-7); }
+.hero-copy { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; justify-content: center; min-height: calc(100svh - var(--header-h)); padding-block: var(--space-7); }
 .hero-name { margin: var(--space-4) 0 var(--space-6); font-size: var(--step-display); line-height: .98; letter-spacing: var(--track-display); }
 .hero-lede { max-width: 26ch; font-size: var(--step-lede); line-height: 1.35; text-wrap: balance; }
 .hero-text { max-width: 40ch; margin-top: var(--space-4); color: var(--muted); }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
+.story-figure { grid-column: 2; grid-row: 1 / 3; align-self: start; position: sticky; top: var(--header-h); display: flex; align-items: center; height: calc(100svh - var(--header-h)); overflow: hidden; }
+.story-steps { grid-column: 1; grid-row: 2; margin: 0; padding: 0 0 var(--space-8); list-style: none; }
+.story-step { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); max-width: 34rem; min-height: 80svh; transition: opacity .5s var(--ease); }
+.story-step h2 { font-size: var(--step-h2); }
+.story-link { margin-top: var(--space-2); }
+.story[data-step] .story-step { opacity: .3; }
+.story[data-step="0"] .story-step[data-step="0"],
+.story[data-step="1"] .story-step[data-step="1"],
+.story[data-step="2"] .story-step[data-step="2"],
+.story[data-step="3"] .story-step[data-step="3"] { opacity: 1; }
 
 /* Fig. 1 — the stack of layers the projects connect.
    Every cycle tells one story: a request leaves the queue and flows down, its data is read from
    storage and rises, and when both reach GPU execution a burst of work crosses its lanes. Loops
    that share --cycle and --start stay in step; keyframe percentages are positions in that cycle.
-   --spread separates the layers: they assemble from apart on load and open on hover. */
+   --spread separates the layers: they assemble from apart on load and open on hover. In the story,
+   a camera (--cam, --cam-k) centers and enlarges the layer being read. */
 
 @property --spread { syntax: '<length>'; inherits: true; initial-value: 0px; }
 @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
+@property --cam { syntax: '<number>'; inherits: true; initial-value: 0; }
+@property --cam-k { syntax: '<number>'; inherits: true; initial-value: 1.5; }
 
 .stack {
   --cycle: 4.8s;
   --start: 1.9s;
   position: relative;
   isolation: isolate;
-  /* As large as the column allows while the four plates still fit on screen. */
-  width: min(100%, calc(.76 * (100svh - 10rem)));
-  margin-left: auto;
+  /* As large as the column allows while the whole figure fits in the pinned area. */
+  width: min(100%, calc(.76 * (100svh - 10.5rem)));
+  margin-inline: auto;
 }
 .stack::before { content: ''; position: absolute; inset: 0 6%; z-index: -1; background: radial-gradient(closest-side, var(--glow), transparent); }
 .stack-grid {
   --row-gap: var(--space-2);
   --spread: 0px;
+  --face: .4627; /* the top face's center: 62 of each plate's 134 viewBox units; see SLAB in build.py */
+  --zoom: 1.45;
+  /* The center of layer --cam-k's top face, measured from the top of the grid. */
+  --cam-y: calc((var(--cam-k) + var(--face)) * (100% - 3 * var(--row-gap)) / 4 + var(--cam-k) * var(--row-gap) + (var(--cam-k) - 1.5) * var(--spread));
   position: relative;
   display: grid;
   grid-template-columns: minmax(min-content, .65fr) minmax(0, 2fr) minmax(min-content, .7fr);
   grid-template-rows: repeat(4, auto);
   row-gap: var(--row-gap);
   align-items: center;
-  transition: --spread .9s var(--ease);
+  transform-origin: 50% var(--cam-y);
+  transform: translateY(calc((50% - var(--cam-y)) * var(--cam))) scale(calc(1 + (var(--zoom) - 1) * var(--cam)));
+  transition: --spread .9s var(--ease), --cam 1.2s var(--ease), --cam-k 1.2s var(--ease);
   animation: assemble 1.7s cubic-bezier(.3, 1.2, .45, 1) .15s backwards;
 }
 .stack-grid:is(:hover, :focus-within) { --spread: .875rem; }
@@ -259,7 +274,7 @@ p, li, dd { text-wrap: pretty; }
   transition: opacity .3s;
 }
 .stack-name::after { content: ''; flex: 1 0 var(--space-3); border-top: 1px solid var(--line-strong); transform-origin: right; animation: line-grow .8s var(--ease) backwards; animation-delay: calc(.9s + var(--k, 0) * .12s); }
-.plate { grid-column: 2; width: 100%; height: auto; overflow: visible; transition: opacity .3s; animation: plate-in .9s ease backwards; animation-delay: calc(.2s + var(--k, 0) * .1s); }
+.plate { grid-column: 2; width: 100%; height: auto; overflow: visible; transition: opacity .6s var(--ease); animation: plate-in .9s ease backwards; animation-delay: calc(.2s + var(--k, 0) * .1s); }
 .plate .rim { fill: var(--slab-top); stroke: var(--line-strong); stroke-width: 1; stroke-linejoin: round; stroke-dasharray: 540; transition: stroke .3s; animation: rim-draw 1.4s var(--ease) backwards, ignite .9s ease-out; animation-delay: calc(.35s + var(--k, 0) * .12s), calc(1.5s + var(--k, 0) * .14s); }
 .plate .rim.flash { animation: rim-draw 1.4s var(--ease) backwards, ignite .9s ease-out, flash var(--cycle) ease-out infinite; animation-delay: calc(.35s + var(--k, 0) * .12s), calc(1.5s + var(--k, 0) * .14s), var(--start); }
 .plate .side-l, .plate .side-r { stroke: var(--line-strong); stroke-width: 1; stroke-linejoin: round; }
@@ -315,7 +330,6 @@ p, li, dd { text-wrap: pretty; }
 /* The vertical path. Positions are the centers of the plates' top faces and follow --spread;
    markers move by animating --p from 0 to 1 between --from and --to. */
 .stack-flow {
-  --face: .4627; /* 62 of each plate's 134 viewBox units; see SLAB in build.py */
   --row: calc((100% - 3 * var(--row-gap)) / 4);
   --r0: calc(var(--row) * var(--face) - 1.5 * var(--spread));
   --r2: calc(var(--row) * (2 + var(--face)) + 2 * var(--row-gap) + .5 * var(--spread));
@@ -337,7 +351,7 @@ p, li, dd { text-wrap: pretty; }
 .stack-flow .beam { top: var(--r0); height: calc(var(--r3) - var(--r0)); width: 3px; margin-left: -1.5px; border-radius: 3px; background: linear-gradient(to bottom, transparent, var(--spark) 66.7%, transparent); box-shadow: 0 0 .75rem color-mix(in srgb, var(--spark) 40%, transparent); animation: beam var(--cycle) ease-out infinite; animation-delay: var(--start); }
 .stack-flow .hit { top: var(--r2); width: 28%; aspect-ratio: 2; margin: -7% 0 0 -14%; border: 2px solid var(--spark); border-radius: 50%; animation: hit var(--cycle) cubic-bezier(.2, .6, .35, 1) infinite; animation-delay: calc(var(--start) + var(--o) * .2s); }
 
-.stack figcaption { max-width: 34rem; margin-top: var(--space-5); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); }
+.stack figcaption { max-width: 34rem; margin-top: var(--space-5); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); transition: opacity .4s; }
 .stack figcaption .fig-no { margin-right: var(--space-2); }
 
 /* Hovering or focusing a project lights its layers and dims the rest. */
@@ -348,6 +362,20 @@ p, li, dd { text-wrap: pretty; }
 .stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) .plate[data-thread="scheduling"] .rim,
 .stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) .plate[data-thread="performance"] .rim,
 .stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) .plate[data-thread="data-paths"] .rim { stroke: var(--accent); }
+
+/* While a layer's description is read, the stack opens and the camera centers and enlarges that
+   layer; the others fade and the labels step aside. */
+.story[data-step] .stack-grid { --spread: 1.25rem; --cam: 1; }
+.story[data-step="0"] .stack-grid { --cam-k: 0; }
+.story[data-step="1"] .stack-grid { --cam-k: 1; }
+.story[data-step="2"] .stack-grid { --cam-k: 2; }
+.story[data-step="3"] .stack-grid { --cam-k: 3; }
+.story[data-step] :is(.stack-name, .stack-project, .stack figcaption) { opacity: 0; }
+.story[data-step] .plate { opacity: .18; }
+.story[data-step="0"] .plate[data-layer="0"],
+.story[data-step="1"] .plate[data-layer="1"],
+.story[data-step="2"] .plate[data-layer="2"],
+.story[data-step="3"] .plate[data-layer="3"] { opacity: 1; }
 
 /* Home: facts, sections, projects */
 
@@ -556,7 +584,7 @@ p, li, dd { text-wrap: pretty; }
 
 .motion-paused * { scroll-behavior: auto !important; }
 .motion-paused :is(.initial-rise, .plate, .plate .rim, .plate > g, .stack .m, .stack-grid) { animation: none; }
-.motion-paused .stack-grid { --spread: 0px !important; }
+.motion-paused .stack-grid { --spread: 0px !important; --cam: 0 !important; }
 .motion-paused .stack-name::after, .motion-paused .stack-project::before { animation: none; }
 .motion-paused .reveal.ready { opacity: 1; transform: none; transition: none; }
 .motion-paused .stack-flow i { display: none; }
@@ -566,20 +594,25 @@ p, li, dd { text-wrap: pretty; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .reveal.ready { opacity: 1; transform: none; }
   .stack .m { animation: none; }
-  .stack-grid { --spread: 0px !important; }
+  .stack-grid { --spread: 0px !important; --cam: 0 !important; }
   .stack-flow i { display: none; }
 }
 
 /* Responsive */
 
 @media (max-width: 64rem) {
-  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: var(--space-6); }
+  .story { column-gap: var(--space-6); }
   .cv-layout { grid-template-columns: 9rem minmax(0, 1fr); gap: var(--space-6); }
 }
 
 @media (max-width: 52rem) {
-  .hero { grid-template-columns: minmax(0, 1fr); gap: var(--space-7); min-height: 0; padding-block: var(--space-7) var(--space-8); }
-  .stack { width: min(100%, 40rem); margin-inline: auto; }
+  .story { grid-template-columns: minmax(0, 1fr); }
+  .hero-copy { min-height: 0; padding-block: var(--space-7) var(--space-6); }
+  /* The figure pins to the top of the screen and the descriptions scroll up beneath it. */
+  .story-figure { grid-column: 1; grid-row: 2; z-index: 2; height: 54svh; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); background: var(--paper); border-bottom: 1px solid var(--line); }
+  .story-steps { grid-row: 3; }
+  .story-step { justify-content: flex-start; min-height: 62svh; padding-top: var(--space-6); }
+  .stack { width: min(100%, calc((54svh - 5.5rem) / 1.32)); }
   .section-head { grid-template-columns: minmax(0, 1fr); }
   .project-row { grid-template-columns: minmax(0, 1fr); }
   .project-name { grid-row: auto; padding-right: var(--space-6); }
@@ -604,7 +637,8 @@ p, li, dd { text-wrap: pretty; }
   .hero-label span { display: block; }
   .hero-label .sep { display: none; }
   .facts { grid-template-columns: minmax(0, 1fr); }
-  .stack-grid { grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
+  .stack-grid { --zoom: 1.7; grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
+  .stack { width: min(100%, calc((54svh - 5.5rem) / 1.14)); }
   .stack-name::after { flex-basis: var(--space-2); }
   .stack-project { padding-left: var(--space-4); font-size: var(--step-ui); }
   .stack-project::before { width: var(--space-3); }
@@ -630,6 +664,7 @@ p, li, dd { text-wrap: pretty; }
   body { background: #fff; color: #000; font-size: 10.5pt; }
   body::after, .site-header, .site-footer, .cv-sidebar, .page-actions, .skip, .reading-progress, .stack-flow { display: none !important; }
   .wrap { width: 100%; }
+  .story-figure { position: static; height: auto; }
   .page-intro { padding: 0 0 12pt; }
   .page-intro h1 { font-size: 28pt; }
   .page-intro .lede { font-size: 13pt; }

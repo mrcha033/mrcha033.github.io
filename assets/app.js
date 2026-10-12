@@ -91,6 +91,27 @@
   }
   $('#print-cv')?.addEventListener('click', () => window.print());
 
+  // Fig. 1's story: the figure focuses the layer whose description is being read.
+  const story = $('.story');
+  if (story) {
+    const steps = $$('.story-step', story);
+    const figure = $('.story-figure', story);
+    const narrow = window.matchMedia('(max-width: 52rem)');
+    let queued = false;
+    const focus = () => {
+      queued = false;
+      // The reading line sits mid-screen, or below the pinned figure on narrow screens.
+      const line = innerHeight * (narrow.matches ? .78 : .55);
+      const read = steps.filter(s => s.getBoundingClientRect().top < line).length;
+      if (read) story.dataset.step = read - 1; else delete story.dataset.step;
+      // The figure's labels are hidden while a layer is in focus, so take it out of reach.
+      figure.inert = read > 0;
+    };
+    window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(focus); } }, { passive: true });
+    window.addEventListener('resize', focus);
+    focus();
+  }
+
   const progress = $('.reading-progress');
   if (progress) {
     let queued = false;
