@@ -193,26 +193,37 @@ p, li, dd { text-wrap: pretty; }
 
 .hero {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr);
   align-items: center;
-  gap: var(--space-8);
+  gap: var(--space-7);
   min-height: min(44rem, calc(100svh - var(--header-h)));
-  padding-block: var(--space-8);
+  padding-block: var(--space-7) var(--space-8);
 }
 .hero-name { margin: var(--space-4) 0 var(--space-6); font-size: var(--step-display); line-height: .98; letter-spacing: var(--track-display); }
 .hero-lede { max-width: 26ch; font-size: var(--step-lede); line-height: 1.35; text-wrap: balance; }
 .hero-text { max-width: 40ch; margin-top: var(--space-4); color: var(--muted); }
 .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
 
-/* Fig. 1 — the stack of layers the projects connect */
+/* Fig. 1 — the stack of layers the projects connect.
+   Every cycle tells one story: a request leaves the queue and flows down, its data is read from
+   storage and rises, and work runs once both reach GPU execution. Loops that share --cycle and
+   --start stay in step; keyframe percentages below are positions in that cycle. */
 
-.stack { position: relative; isolation: isolate; }
+.stack {
+  --cycle: 4.8s;
+  --start: 1.6s;
+  position: relative;
+  isolation: isolate;
+  /* As large as the column allows while the four plates still fit on screen. */
+  width: min(100%, calc(.86 * (100svh - 10rem)));
+  margin-left: auto;
+}
 .stack::before { content: ''; position: absolute; inset: 0 6%; z-index: -1; background: radial-gradient(closest-side, var(--glow), transparent); }
 .stack-grid {
-  --row-gap: var(--space-3);
+  --row-gap: var(--space-2);
   position: relative;
   display: grid;
-  grid-template-columns: minmax(min-content, .95fr) minmax(0, 1.5fr) minmax(min-content, .9fr);
+  grid-template-columns: minmax(min-content, .65fr) minmax(0, 2fr) minmax(min-content, .7fr);
   grid-template-rows: repeat(4, auto);
   row-gap: var(--row-gap);
   align-items: center;
@@ -229,9 +240,10 @@ p, li, dd { text-wrap: pretty; }
   color: var(--muted);
   transition: opacity .3s;
 }
-.stack-name::after { content: ''; flex: 1 0 var(--space-3); border-top: 1px solid var(--line-strong); }
-.plate { grid-column: 2; width: 100%; height: auto; overflow: visible; transition: opacity .3s; animation: plate-in 1s var(--ease) backwards; animation-delay: calc(.35s + var(--k, 0) * .1s); }
-.plate .rim { fill: var(--paper); stroke: var(--line-strong); stroke-width: 1; transition: stroke .3s, fill .3s; }
+.stack-name::after { content: ''; flex: 1 0 var(--space-3); border-top: 1px solid var(--line-strong); transform-origin: right; animation: line-grow .8s var(--ease) backwards; animation-delay: calc(.9s + var(--k, 0) * .12s); }
+.plate { grid-column: 2; width: 100%; height: auto; overflow: visible; transition: opacity .3s, transform .5s var(--ease); animation: plate-in 1s var(--ease) backwards; animation-delay: calc(.35s + var(--k, 0) * .12s); }
+.plate .rim { fill: var(--paper); stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 540; transition: stroke .3s, fill .3s; animation: rim-draw 1.4s var(--ease) backwards; animation-delay: calc(.35s + var(--k, 0) * .12s); }
+.plate > g { animation: fade-in .9s ease backwards; animation-delay: calc(.75s + var(--k, 0) * .12s); }
 .plate line { stroke: var(--mark-muted); stroke-width: 1; }
 .plate line.hot { stroke: var(--accent); stroke-width: 1.5; }
 .plate .cell { fill: none; stroke: var(--mark-muted); stroke-width: 1; }
@@ -247,34 +259,66 @@ p, li, dd { text-wrap: pretty; }
   line-height: 1.25;
   transition: opacity .3s, color .2s;
 }
-.stack-project::before { content: ''; position: absolute; left: 0; top: 50%; width: var(--space-5); border-top: 1px solid var(--line-strong); }
+.stack-project::before { content: ''; position: absolute; left: 0; top: 50%; width: var(--space-5); border-top: 1px solid var(--line-strong); transform-origin: left; animation: line-grow .8s var(--ease) backwards; animation-delay: calc(1.1s + var(--k, 0) * .12s); }
 .stack-project.span-2 { grid-row: 1 / 3; align-self: stretch; display: flex; align-items: center; }
 .stack-project.span-2::before { top: calc((100% - var(--row-gap)) / 4); bottom: calc((100% - var(--row-gap)) / 4); border: 1px solid var(--line-strong); border-left: 0; }
 .stack-project:hover { color: var(--accent); }
-.stack-flow { grid-column: 2; grid-row: 1 / -1; position: relative; align-self: stretch; pointer-events: none; }
-.stack-flow::before { content: ''; position: absolute; left: 50%; top: 12.5%; bottom: 12.5%; border-left: 1px solid var(--line-strong); opacity: .6; }
-.stack-flow i {
-  position: absolute;
-  left: 50%;
-  top: var(--from);
-  width: .5rem;
-  height: .5rem;
-  margin: -.25rem 0 0 -.25rem;
-  border-radius: 50%;
-  background: var(--accent);
-  box-shadow: 0 0 0 2px var(--paper);
-  opacity: 0;
-  animation: stack-flow var(--dur) cubic-bezier(.45, 0, .55, 1) var(--delay) infinite;
+
+/* Moving shapes. Transforms on SVG shapes use the plate's unit square (see plate() in build.py). */
+.stack .m { transform-box: fill-box; transform-origin: center; }
+
+/* Requests: the queue breathes, deadline-bound requests send out rings, and one request a cycle,
+   from a rotating spot, moves to the center. */
+.plate .queue { animation: queue 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * -.53s); }
+.plate .ripple { fill: none; stroke: var(--accent); stroke-width: 1; opacity: 0; animation: ripple 2.4s cubic-bezier(.2, .6, .35, 1) infinite; animation-delay: calc(var(--i) * -.6s); }
+.plate .go { fill: var(--accent); opacity: 0; animation: go calc(var(--cycle) * 3) linear infinite; animation-delay: calc(var(--start) + var(--n) * var(--cycle)); }
+
+/* Serving runtime: pages are allocated and freed while the scheduler moves between them. */
+.plate .alloc { fill: var(--mark-muted); fill-opacity: 0; animation: alloc calc(var(--cycle) * 2) ease-in-out infinite; animation-delay: calc(var(--i) * -2.3s); }
+.plate rect.free { stroke: var(--mark-muted); stroke-width: 1; animation: free calc(var(--cycle) * 2) ease-in-out infinite; animation-delay: calc(var(--i) * -3.1s); }
+.plate .cursor { fill: none; stroke: var(--accent); stroke-width: 1.25; opacity: 0; animation: sched calc(var(--cycle) * 2) cubic-bezier(.6, 0, .2, 1) infinite; animation-delay: var(--start); }
+
+/* GPU execution: background work on the outer lanes; the accented lanes run after the arrival. */
+.plate .job { fill: var(--mark-muted); opacity: 0; animation: job calc(2.4s + var(--i) * .25s) linear infinite; animation-delay: calc(var(--i) * -.9s); }
+.plate .kernel { fill: var(--accent); opacity: 0; animation: kernel var(--cycle) linear infinite; animation-delay: calc(var(--start) + (var(--i) - 4) * .14s); }
+.plate .lane { animation: lane var(--cycle) ease-in-out infinite; animation-delay: var(--start); }
+
+/* Memory and storage: blocks are read in turn and one moves to the center to rise. */
+.plate .read { animation: read var(--cycle) ease-in-out infinite; animation-delay: calc(var(--start) + var(--i) * .2s); }
+.plate .fetch { opacity: 0; animation: fetch var(--cycle) infinite; animation-delay: var(--start); }
+
+/* The vertical path: row centers, then the request, the data, and the ripple where they meet. */
+.stack-flow {
+  --row: calc((100% - 3 * var(--row-gap)) / 4);
+  --r0: calc(var(--row) * .5);
+  --r2: calc(var(--row) * 2.5 + var(--row-gap) * 2);
+  --r3: calc(var(--row) * 3.5 + var(--row-gap) * 3);
+  grid-column: 2;
+  grid-row: 1 / -1;
+  position: relative;
+  align-self: stretch;
+  pointer-events: none;
 }
-.stack-flow i.up { background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 2px var(--paper); }
+.stack-flow::before { content: ''; position: absolute; left: 50%; top: var(--r0); bottom: var(--r0); border-left: 1px solid var(--line-strong); opacity: .6; }
+.stack-flow i { position: absolute; left: 50%; top: var(--r0); width: .625rem; height: .625rem; margin: -.3125rem 0 0 -.3125rem; border-radius: 50%; opacity: 0; }
+.stack-flow .down { background: var(--accent); box-shadow: 0 0 0 2px var(--paper); animation: flow-down var(--cycle) infinite; animation-delay: var(--start); }
+.stack-flow .up { top: var(--r3); background: var(--paper); box-shadow: inset 0 0 0 1.5px var(--accent), 0 0 0 2px var(--paper); animation: flow-up var(--cycle) infinite; animation-delay: var(--start); }
+.stack-flow :is(.down, .up)::after { content: ''; position: absolute; left: 50%; width: 2px; height: 2.25rem; margin-left: -1px; }
+.stack-flow .down::after { bottom: 100%; background: linear-gradient(to top, var(--accent), transparent); }
+.stack-flow .up::after { top: 100%; background: linear-gradient(to bottom, var(--accent), transparent); }
+.stack-flow .hit { top: var(--r2); width: 5rem; height: 2.5rem; margin: -1.25rem 0 0 -2.5rem; border: 1.5px solid var(--accent); animation: hit var(--cycle) cubic-bezier(.2, .6, .35, 1) infinite; animation-delay: var(--start); }
+
 .stack figcaption { max-width: 34rem; margin-top: var(--space-5); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); }
 .stack figcaption .fig-no { margin-right: var(--space-2); }
 
-/* Hovering or focusing a project lights its layers and dims the rest. */
+/* Hovering or focusing a project lifts and lights its layers and dims the rest. */
 .stack-grid:has([data-thread]:is(:hover, :focus-visible)) :is(.stack-name, .plate, .stack-project) { opacity: .35; }
 .stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) [data-thread="scheduling"],
 .stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) [data-thread="performance"],
 .stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) [data-thread="data-paths"] { opacity: 1; }
+.stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) .plate[data-thread="scheduling"],
+.stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) .plate[data-thread="performance"],
+.stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) .plate[data-thread="data-paths"] { transform: translateY(-.375rem); }
 .stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) .plate[data-thread="scheduling"] .rim,
 .stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) .plate[data-thread="performance"] .rim,
 .stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) .plate[data-thread="data-paths"] .rim { stroke: var(--accent); }
@@ -430,13 +474,57 @@ p, li, dd { text-wrap: pretty; }
 @keyframes rise-in { from { opacity: 0; transform: translateY(1rem); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes plate-in { from { opacity: 0; transform: translateY(-.75rem); } }
-@keyframes stack-flow { 0% { top: var(--from); opacity: 0; } 15%, 85% { opacity: 1; } 100% { top: var(--to); opacity: 0; } }
+@keyframes rim-draw { from { stroke-dashoffset: 540; } }
+@keyframes line-grow { from { transform: scaleX(0); } }
+@keyframes queue { 50% { transform: scale(.72); } }
+@keyframes ripple { from { opacity: .9; transform: scale(1); } to { opacity: 0; transform: scale(3); } }
+@keyframes go {
+  0% { opacity: 0; transform: translate(var(--dx), var(--dy)); animation-timing-function: cubic-bezier(.5, 0, .3, 1); }
+  .6% { opacity: 1; }
+  3.3% { opacity: 1; transform: none; }
+  4% { opacity: 0; transform: none; }
+}
+@keyframes alloc { 35%, 75% { fill-opacity: 1; } }
+@keyframes free { 40%, 70% { fill-opacity: .12; } }
+@keyframes sched {
+  0%, 9% { opacity: 1; transform: translate(.57px, 0); }
+  12.5%, 21.5% { opacity: 1; transform: translate(.57px, .38px); }
+  25%, 34% { opacity: 1; transform: translate(.38px, .19px); }
+  37.5%, 46.5% { opacity: 1; transform: translate(.38px, .76px); }
+  50%, 59% { opacity: 1; transform: translate(.19px, .57px); }
+  62.5%, 71.5% { opacity: 1; transform: translate(.76px, 0); }
+  75%, 84% { opacity: 1; transform: translate(.19px, .38px); }
+  87.5%, 96.5% { opacity: 1; transform: translate(.57px, .76px); }
+  100% { opacity: 1; transform: translate(.57px, 0); }
+}
+@keyframes job { 0% { opacity: 0; transform: none; } 12%, 85% { opacity: 1; } 100% { opacity: 0; transform: translate(.78px, 0); } }
+@keyframes kernel { 0%, 50% { opacity: 0; transform: none; } 53%, 84% { opacity: 1; } 88%, 100% { opacity: 0; transform: translate(.78px, 0); } }
+@keyframes lane { 0%, 46%, 96%, 100% { stroke-opacity: .5; } 54%, 84% { stroke-opacity: 1; stroke-width: 2.25; } }
+@keyframes read { 0%, 10%, 26%, 100% { fill-opacity: .45; } 16% { fill-opacity: 1; } }
+@keyframes fetch {
+  0%, 24% { opacity: 0; transform: none; }
+  26% { opacity: 1; transform: none; animation-timing-function: cubic-bezier(.5, 0, .3, 1); }
+  32% { opacity: 1; transform: translate(-.0625px, -.1875px); }
+  35%, 100% { opacity: 0; transform: translate(-.0625px, -.1875px); }
+}
+@keyframes flow-down {
+  0%, 10% { top: var(--r0); opacity: 0; animation-timing-function: cubic-bezier(.45, 0, .55, 1); }
+  13%, 47% { opacity: 1; }
+  50%, 100% { top: var(--r2); opacity: 0; }
+}
+@keyframes flow-up {
+  0%, 32% { top: var(--r3); opacity: 0; animation-timing-function: cubic-bezier(.45, 0, .55, 1); }
+  35%, 47% { opacity: 1; }
+  50%, 100% { top: var(--r2); opacity: 0; }
+}
+@keyframes hit { 0%, 49% { opacity: 0; transform: scale(.2); } 51% { opacity: .9; } 78%, 100% { opacity: 0; transform: scale(1.4); } }
 @view-transition { navigation: auto; }
 ::view-transition-old(root) { animation: fade-in .2s ease reverse; }
 ::view-transition-new(root) { animation: fade-in .35s ease; }
 
 .motion-paused * { scroll-behavior: auto !important; }
-.motion-paused :is(.initial-rise, .plate) { animation: none; }
+.motion-paused :is(.initial-rise, .plate, .plate .rim, .plate > g, .stack .m) { animation: none; }
+.motion-paused .stack-name::after, .motion-paused .stack-project::before { animation: none; }
 .motion-paused .reveal.ready { opacity: 1; transform: none; transition: none; }
 .motion-paused .stack-flow i { display: none; }
 
@@ -444,19 +532,20 @@ p, li, dd { text-wrap: pretty; }
   html { scroll-behavior: auto; }
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
   .reveal.ready { opacity: 1; transform: none; }
+  .stack .m { animation: none; }
   .stack-flow i { display: none; }
 }
 
 /* Responsive */
 
 @media (max-width: 64rem) {
-  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, .95fr); gap: var(--space-6); }
+  .hero { grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); gap: var(--space-6); }
   .cv-layout { grid-template-columns: 9rem minmax(0, 1fr); gap: var(--space-6); }
 }
 
 @media (max-width: 52rem) {
   .hero { grid-template-columns: minmax(0, 1fr); gap: var(--space-7); min-height: 0; padding-block: var(--space-7) var(--space-8); }
-  .stack { width: min(100%, 34rem); margin-inline: auto; }
+  .stack { width: min(100%, 40rem); margin-inline: auto; }
   .section-head { grid-template-columns: minmax(0, 1fr); }
   .project-row { grid-template-columns: minmax(0, 1fr); }
   .project-name { grid-row: auto; padding-right: var(--space-6); }
@@ -481,7 +570,7 @@ p, li, dd { text-wrap: pretty; }
   .hero-label span { display: block; }
   .hero-label .sep { display: none; }
   .facts { grid-template-columns: minmax(0, 1fr); }
-  .stack-grid { grid-template-columns: minmax(min-content, .8fr) minmax(0, 1.2fr) minmax(min-content, .8fr); }
+  .stack-grid { grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
   .stack-name::after { flex-basis: var(--space-2); }
   .stack-project { padding-left: var(--space-4); font-size: var(--step-ui); }
   .stack-project::before { width: var(--space-3); }
