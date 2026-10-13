@@ -255,7 +255,7 @@ p, li, dd { text-wrap: pretty; }
   row-gap: var(--row-gap);
   align-items: center;
   transform-origin: 50% var(--cam-y);
-  transform: translateY(calc((50% - var(--cam-y)) * var(--cam))) scale(calc(1 + (var(--zoom) - 1) * var(--cam)));
+  transform: translateY(calc((50% - var(--cam-y) - var(--cam-lift, 0px)) * var(--cam))) scale(calc(1 + (var(--zoom) - 1) * var(--cam)));
   transition: --spread .9s var(--ease), --cam 1.2s var(--ease), --cam-k 1.2s var(--ease);
   animation: assemble 1.7s cubic-bezier(.3, 1.2, .45, 1) .15s backwards;
 }
@@ -608,11 +608,17 @@ p, li, dd { text-wrap: pretty; }
 @media (max-width: 52rem) {
   .story { grid-template-columns: minmax(0, 1fr); }
   .hero-copy { min-height: 0; padding-block: var(--space-7) var(--space-6); }
-  /* The figure pins to the top of the screen and the descriptions scroll up beneath it. */
-  .story-figure { grid-column: 1; grid-row: 2; z-index: 2; height: 54svh; margin-inline: calc(-1 * var(--gutter)); padding-inline: var(--gutter); background: var(--paper); border-bottom: 1px solid var(--line); }
-  .story-steps { grid-row: 3; }
-  .story-step { justify-content: flex-start; min-height: 62svh; padding-top: var(--space-6); }
-  .stack { width: min(100%, calc((54svh - 5.5rem) / 1.32)); }
+  /* The figure fills the screen, spanning the steps' row so it stays pinned while they pass, and
+     each description crosses it as a card. The camera lifts the focused layer above the card. */
+  .story-figure { grid-column: 1; grid-row: 2 / 4; z-index: 1; }
+  .story-steps { grid-column: 1; grid-row: 3; z-index: 2; padding: 90svh 0 12svh; pointer-events: none; }
+  .story-step { min-height: 0; max-width: none; margin-bottom: 70svh; padding: var(--space-4) var(--space-5); gap: var(--space-2); border: 1px solid var(--line); border-radius: 4px; background: color-mix(in srgb, var(--paper) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 12px 32px var(--shadow); pointer-events: auto; }
+  .story-step:last-child { margin-bottom: 0; }
+  .story-step h2 { font-size: var(--step-lede); }
+  .story-step p:not(.label) { font-size: var(--step-ui); line-height: 1.5; }
+  .story-link { margin-top: 0; }
+  .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.32)); }
+  .stack-grid { --cam-lift: calc(.28 * (100svh - var(--header-h))); }
   .section-head { grid-template-columns: minmax(0, 1fr); }
   .project-row { grid-template-columns: minmax(0, 1fr); }
   .project-name { grid-row: auto; padding-right: var(--space-6); }
@@ -637,8 +643,8 @@ p, li, dd { text-wrap: pretty; }
   .hero-label span { display: block; }
   .hero-label .sep { display: none; }
   .facts { grid-template-columns: minmax(0, 1fr); }
-  .stack-grid { --zoom: 1.7; grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
-  .stack { width: min(100%, calc((54svh - 5.5rem) / 1.14)); }
+  .stack-grid { --zoom: 1.4; grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
+  .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.14)); }
   .stack-name::after { flex-basis: var(--space-2); }
   .stack-project { padding-left: var(--space-4); font-size: var(--step-ui); }
   .stack-project::before { width: var(--space-3); }

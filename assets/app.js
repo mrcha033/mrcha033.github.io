@@ -100,8 +100,9 @@
     let queued = false;
     const focus = () => {
       queued = false;
-      // The reading line sits mid-screen, or below the pinned figure on narrow screens.
-      const line = innerHeight * (narrow.matches ? .78 : .55);
+      // The reading line sits mid-screen, or low on narrow screens, so a layer comes into focus as
+      // its card rises over the figure.
+      const line = innerHeight * (narrow.matches ? .85 : .55);
       const read = steps.filter(s => s.getBoundingClientRect().top < line).length;
       if (read) story.dataset.step = read - 1; else delete story.dataset.step;
       // The figure's labels are hidden while a layer is in focus, so take it out of reach.
