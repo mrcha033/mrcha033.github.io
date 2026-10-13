@@ -2,8 +2,9 @@
    Type sizes, spacing, tracking, and color come from the tokens in :root;
    reach for a token before introducing a new value. */
 
-@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-serif.woff') format('woff'); font-weight: 400; font-display: swap; }
-@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-italic.woff') format('woff'); font-weight: 400; font-style: italic; font-display: swap; }
+/* P052 roman and italic, subset to Latin, Latin Extended-A, punctuation, and arrows (see README). */
+@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-serif.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
 /* Korean: a Noto Serif KR subset holding only the syllables the site uses (scripts/fetch_korean_font.py). */
 @font-face { font-family: 'Scholar KR'; src: url('/assets/fonts/scholar-ko.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+AC00-D7A3; }
 
@@ -118,9 +119,10 @@ button, a, input { -webkit-tap-highlight-color: transparent; }
 svg { display: block; }
 h1, h2, h3, p, figure, blockquote, dl, dd { margin: 0; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.12; letter-spacing: var(--track-tight); text-wrap: balance; }
-p, li, dd { text-wrap: pretty; }
+p, li, dd, figcaption { text-wrap: pretty; }
 [lang="ko"] { font-family: var(--serif-ko); letter-spacing: 0; }
 [hidden] { display: none !important; }
+.nowrap { white-space: nowrap; }
 
 .wrap { width: min(75rem, 100% - 2 * var(--gutter)); margin-inline: auto; }
 .skip { position: fixed; top: -100px; left: var(--space-5); z-index: 100; padding: var(--space-3) var(--space-5); background: var(--ink); color: var(--paper); font-size: var(--step-ui); }
@@ -134,21 +136,23 @@ p, li, dd { text-wrap: pretty; }
   text-transform: uppercase;
   color: var(--muted);
 }
+.label .as-is { letter-spacing: .03em; text-transform: none; } /* SLOs, PyPI: names that keep their case */
 .fig-no { font-size: var(--step-meta); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--muted); }
 
 /* Links and buttons */
 
 .arrow { flex: none; transition: transform .35s var(--ease); }
+/* Inline, so a link that wraps is underlined on every line and keeps its arrow after the last word.
+   The top padding makes an inline link a full 24px target without moving its underline. */
 .text-link {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding-bottom: 2px;
+  padding-block: 3px 2px;
   border-bottom: 1px solid var(--line-strong);
   font-size: var(--step-ui);
   line-height: 1.5;
   transition: border-color .2s;
 }
+.text-link .arrow { display: inline-block; margin-left: var(--space-2); vertical-align: -.17em; }
+p:not(.link-row) > .text-link { padding-top: 5px; }
 .text-link:hover { border-color: currentColor; }
 .text-link:hover .arrow { transform: translateX(3px); }
 .text-link[target]:hover .arrow { transform: translate(2px, -2px); }
@@ -191,7 +195,7 @@ p, li, dd { text-wrap: pretty; }
 }
 .identity-text { font-size: var(--step-meta); letter-spacing: var(--track-caps); text-transform: uppercase; }
 .nav-links { display: flex; align-items: center; gap: var(--space-6); font-size: var(--step-ui); }
-.nav-links a { position: relative; padding-block: var(--space-2); color: var(--muted); transition: color .2s; }
+.nav-links a { position: relative; min-width: 1.5rem; padding-block: var(--space-2); color: var(--muted); text-align: center; transition: color .2s; }
 .nav-links a:hover, .nav-links a[aria-current="page"] { color: var(--ink); }
 .nav-links a::after { content: ''; position: absolute; left: 0; right: 0; bottom: 2px; height: 1px; background: currentColor; transform: scaleX(0); transform-origin: left; transition: transform .35s var(--ease); }
 .nav-links a:hover::after, .nav-links a[aria-current="page"]::after { transform: scaleX(1); }
@@ -224,12 +228,15 @@ p, li, dd { text-wrap: pretty; }
    storage and rises, and when both reach GPU execution a burst of work crosses its lanes. Loops
    that share --cycle and --start stay in step; keyframe percentages are positions in that cycle.
    --spread separates the layers: they assemble from apart on load and open on hover. In the story,
-   a camera (--cam, --cam-k) centers and enlarges the layer being read. */
+   a camera (--cam, --cam-k) centers and enlarges (--zoom) the layer being read; on narrow screens
+   app.js sets --zoom and --cam-lift for each layer so it clears that layer's card. */
 
 @property --spread { syntax: '<length>'; inherits: true; initial-value: 0px; }
 @property --p { syntax: '<number>'; inherits: false; initial-value: 0; }
 @property --cam { syntax: '<number>'; inherits: true; initial-value: 0; }
 @property --cam-k { syntax: '<number>'; inherits: true; initial-value: 1.5; }
+@property --zoom { syntax: '<number>'; inherits: true; initial-value: 1.45; }
+@property --cam-lift { syntax: '<length>'; inherits: true; initial-value: 0px; }
 
 .stack {
   --cycle: 4.8s;
@@ -255,11 +262,12 @@ p, li, dd { text-wrap: pretty; }
   row-gap: var(--row-gap);
   align-items: center;
   transform-origin: 50% var(--cam-y);
-  transform: translateY(calc((50% - var(--cam-y) - var(--cam-lift, 0px)) * var(--cam))) scale(calc(1 + (var(--zoom) - 1) * var(--cam)));
-  transition: --spread .9s var(--ease), --cam 1.2s var(--ease), --cam-k 1.2s var(--ease);
+  transform: translateY(calc((50% - var(--cam-y) - var(--cam-lift)) * var(--cam))) scale(calc(1 + (var(--zoom) - 1) * var(--cam)));
+  transition: --spread .9s var(--ease), --cam 1.2s var(--ease), --cam-k 1.2s var(--ease), --zoom 1.2s var(--ease), --cam-lift 1.2s var(--ease);
   animation: assemble 1.7s cubic-bezier(.3, 1.2, .45, 1) .15s backwards;
 }
-.stack-grid:is(:hover, :focus-within) { --spread: .875rem; }
+.stack-grid:focus-within { --spread: .875rem; }
+@media (hover: hover) { .stack-grid:hover { --spread: .875rem; } }
 .stack-name, .plate, .stack-project { transform: translateY(calc((var(--k, 0) - 1.5) * var(--spread))); }
 .stack-name {
   grid-column: 1;
@@ -290,6 +298,7 @@ p, li, dd { text-wrap: pretty; }
 .stack-project {
   grid-column: 3;
   position: relative;
+  padding-block: var(--space-2); /* a taller target for a finger; the rows are taller still */
   padding-left: calc(var(--space-5) + var(--space-2));
   font-family: var(--serif);
   font-size: var(--step-body);
@@ -300,6 +309,8 @@ p, li, dd { text-wrap: pretty; }
 .stack-project.span-2 { grid-row: 1 / 3; align-self: stretch; display: flex; align-items: center; }
 .stack-project.span-2::before { top: calc((100% - var(--row-gap)) / 4 - .5 * var(--spread)); bottom: calc((100% - var(--row-gap)) / 4 - .5 * var(--spread)); border: 1px solid var(--line-strong); border-left: 0; }
 .stack-project:hover { color: var(--accent); }
+.stack-project:focus-visible { outline: none; }
+.stack-project:focus-visible > span { outline: 2px solid var(--accent); outline-offset: 4px; }
 
 /* Moving shapes. Transforms on SVG shapes use the plate's unit square (see plate() in build.py). */
 .stack .m { transform-box: fill-box; transform-origin: center; }
@@ -354,14 +365,24 @@ p, li, dd { text-wrap: pretty; }
 .stack figcaption { max-width: 34rem; margin-top: var(--space-5); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); transition: opacity .4s; }
 .stack figcaption .fig-no { margin-right: var(--space-2); }
 
-/* Hovering or focusing a project lights its layers and dims the rest. */
-.stack-grid:has([data-thread]:is(:hover, :focus-visible)) :is(.stack-name, .plate, .stack-project) { opacity: .35; }
-.stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) [data-thread="scheduling"],
-.stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) [data-thread="performance"],
-.stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) [data-thread="data-paths"] { opacity: 1; }
-.stack-grid:has([data-thread="scheduling"]:is(:hover, :focus-visible)) .plate[data-thread="scheduling"] .rim,
-.stack-grid:has([data-thread="performance"]:is(:hover, :focus-visible)) .plate[data-thread="performance"] .rim,
-.stack-grid:has([data-thread="data-paths"]:is(:hover, :focus-visible)) .plate[data-thread="data-paths"] .rim { stroke: var(--accent); }
+/* Focusing a project, or hovering one where there is a pointer, lights its layers and dims the rest.
+   Touch screens skip the hover, which would otherwise stick after a tap. */
+.stack-grid:has([data-thread]:focus-visible) :is(.stack-name, .plate, .stack-project) { opacity: .35; }
+.stack-grid:has([data-thread="scheduling"]:focus-visible) [data-thread="scheduling"],
+.stack-grid:has([data-thread="performance"]:focus-visible) [data-thread="performance"],
+.stack-grid:has([data-thread="data-paths"]:focus-visible) [data-thread="data-paths"] { opacity: 1; }
+.stack-grid:has([data-thread="scheduling"]:focus-visible) .plate[data-thread="scheduling"] .rim,
+.stack-grid:has([data-thread="performance"]:focus-visible) .plate[data-thread="performance"] .rim,
+.stack-grid:has([data-thread="data-paths"]:focus-visible) .plate[data-thread="data-paths"] .rim { stroke: var(--accent); }
+@media (hover: hover) {
+  .stack-grid:has([data-thread]:hover) :is(.stack-name, .plate, .stack-project) { opacity: .35; }
+  .stack-grid:has([data-thread="scheduling"]:hover) [data-thread="scheduling"],
+  .stack-grid:has([data-thread="performance"]:hover) [data-thread="performance"],
+  .stack-grid:has([data-thread="data-paths"]:hover) [data-thread="data-paths"] { opacity: 1; }
+  .stack-grid:has([data-thread="scheduling"]:hover) .plate[data-thread="scheduling"] .rim,
+  .stack-grid:has([data-thread="performance"]:hover) .plate[data-thread="performance"] .rim,
+  .stack-grid:has([data-thread="data-paths"]:hover) .plate[data-thread="data-paths"] .rim { stroke: var(--accent); }
+}
 
 /* While a layer's description is read, the stack opens and the camera centers and enlarges that
    layer; the others fade and the labels step aside. */
@@ -402,7 +423,7 @@ p, li, dd { text-wrap: pretty; }
 .project-result { grid-column: 2; font-size: var(--step-ui); color: var(--muted); }
 .project-result strong { font-weight: 600; color: var(--ink); }
 .project-row > .arrow { position: absolute; top: calc(var(--space-6) + .35rem); right: 0; }
-.project-row:hover > .arrow { transform: translate(2px, -2px); }
+.project-row:hover > .arrow { transform: translateX(3px); }
 
 .oss-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-7); }
 .oss-item { padding-top: var(--space-5); border-top: 1px solid var(--line); }
@@ -411,15 +432,21 @@ p, li, dd { text-wrap: pretty; }
 
 /* Footer */
 
-.site-footer { border-top: 1px solid var(--line); }
-.footer-main { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-6); padding-block: var(--space-8) var(--space-7); }
+/* The footer's rules sit inside the page margins, like every other rule. The email is a block so its
+   underline lines up with the links' underlines. */
+.footer-main { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-6); padding-block: var(--space-8) var(--space-7); border-top: 1px solid var(--line); }
 .footer-contact .label { margin-bottom: var(--space-3); }
-.footer-email { font-family: var(--serif); font-size: var(--step-h2); line-height: 1.2; letter-spacing: var(--track-tight); border-bottom: 1px solid var(--line-strong); transition: border-color .2s; overflow-wrap: anywhere; }
+.footer-email { display: block; width: fit-content; max-width: 100%; font-family: var(--serif); font-size: var(--step-h2); line-height: 1.2; letter-spacing: var(--track-tight); border-bottom: 1px solid var(--line-strong); transition: border-color .2s; overflow-wrap: anywhere; }
 .footer-email:hover { border-color: currentColor; }
 .footer-links { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
-.footer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3) var(--space-5); padding-block: var(--space-5); border-top: 1px solid var(--line); font-size: var(--step-meta); color: var(--muted); }
+.footer-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); padding-block: var(--space-5); border-top: 1px solid var(--line); font-size: var(--step-meta); color: var(--muted); }
+.footer-place { margin-left: auto; }
 .footer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); }
 .footer-bottom a:hover { color: var(--ink); }
+.footer-controls :is(a, button) { min-height: 1.5rem; }
+.to-top { display: inline-flex; align-items: center; gap: var(--space-1); }
+.to-top .arrow { width: .875rem; height: .875rem; }
+.to-top:hover .arrow { transform: translateY(-2px); }
 .motion-toggle { display: inline-flex; align-items: center; gap: var(--space-2); padding-block: var(--space-1); font-size: inherit; color: inherit; }
 .motion-toggle:hover:not(:disabled) { color: var(--ink); }
 .motion-toggle:disabled { cursor: default; }
@@ -434,6 +461,7 @@ p, li, dd { text-wrap: pretty; }
 .page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
 .page-missing { padding-bottom: var(--space-9); border-bottom: 0; }
 .name-ko { margin-left: .2em; font-family: var(--serif-ko); font-size: var(--step-lede); letter-spacing: 0; color: var(--muted); }
+.cv-contact { display: none; } /* printed only; on screen the footer carries it */
 
 /* Research */
 
@@ -468,6 +496,8 @@ p, li, dd { text-wrap: pretty; }
 .journal-count { margin-bottom: var(--space-4); font-size: var(--step-meta); color: var(--muted); }
 .journal-card { position: relative; display: grid; grid-template-columns: 10rem minmax(0, 1fr) 1.5rem; gap: var(--space-6); padding-block: var(--space-6); border-top: 1px solid var(--line); }
 .journal-card:last-child { border-bottom: 1px solid var(--line); }
+/* Without the search tools, the intro's rule already sits above the first note. */
+.journal > #journal-list:first-child > .journal-card:first-child { border-top: 0; }
 .journal-card::before { content: ''; position: absolute; inset: 0 calc(-1 * var(--space-4)); z-index: -1; background: var(--paper-deep); opacity: 0; transition: opacity .3s; }
 .journal-card:hover::before { opacity: 1; }
 .journal-date { display: flex; flex-direction: column; gap: var(--space-1); font-size: var(--step-meta); color: var(--muted); }
@@ -479,7 +509,7 @@ p, li, dd { text-wrap: pretty; }
 
 .reading-progress { position: fixed; top: 0; left: 0; z-index: 50; width: 0; height: 2px; background: var(--accent); }
 .reading-layout { max-width: 44rem; margin-inline: auto; padding-block: var(--space-7) var(--space-9); }
-.back-link { margin-bottom: var(--space-6); color: var(--muted); }
+.back-link { display: inline-block; margin-bottom: var(--space-6); color: var(--muted); }
 .article-heading h1 { margin: var(--space-4) 0; font-size: var(--step-h1); }
 .article-heading .tag { color: var(--accent); }
 .article-deck { font-size: var(--step-lede); line-height: 1.45; color: var(--muted); }
@@ -582,6 +612,10 @@ p, li, dd { text-wrap: pretty; }
 ::view-transition-old(root) { animation: fade-in .2s ease reverse; }
 ::view-transition-new(root) { animation: fade-in .35s ease; }
 
+/* app.js marks Fig. 1 idle while it is off screen: its loops pause, and on a phone, where the figure
+   starts below the hero, its entrance plays when it scrolls into view. */
+.stack.idle, .stack.idle *, .stack.idle *::before, .stack.idle *::after { animation-play-state: paused !important; }
+
 .motion-paused * { scroll-behavior: auto !important; }
 .motion-paused :is(.initial-rise, .plate, .plate .rim, .plate > g, .stack .m, .stack-grid) { animation: none; }
 .motion-paused .stack-grid { --spread: 0px !important; --cam: 0 !important; }
@@ -598,6 +632,15 @@ p, li, dd { text-wrap: pretty; }
   .stack-flow i { display: none; }
 }
 
+/* With motion paused or reduced, the story highlights a layer without zooming. On narrow screens the
+   cards would hide it, so the camera still moves there, in a cut rather than a glide. */
+@media (max-width: 52rem) {
+  .motion-paused .story[data-step] .stack-grid { --cam: 1 !important; transition: none; }
+}
+@media (max-width: 52rem) and (prefers-reduced-motion: reduce) {
+  .story[data-step] .stack-grid { --cam: 1 !important; }
+}
+
 /* Responsive */
 
 @media (max-width: 64rem) {
@@ -612,12 +655,13 @@ p, li, dd { text-wrap: pretty; }
      each description crosses it as a card. The camera lifts the focused layer above the card. */
   .story-figure { grid-column: 1; grid-row: 2 / 4; z-index: 1; }
   .story-steps { grid-column: 1; grid-row: 3; z-index: 2; padding: 90svh 0 12svh; pointer-events: none; }
-  .story-step { min-height: 0; max-width: none; margin-bottom: 70svh; padding: var(--space-4) var(--space-5); gap: var(--space-2); border: 1px solid var(--line); border-radius: 4px; background: color-mix(in srgb, var(--paper) 88%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: 0 12px 32px var(--shadow); pointer-events: auto; }
+  .story-step { min-height: 0; max-width: none; margin-bottom: 70svh; padding: var(--space-4) var(--space-5); gap: var(--space-2); border: 1px solid var(--line); border-radius: 2px; background: color-mix(in srgb, var(--paper) 90%, transparent); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); box-shadow: 0 12px 32px var(--shadow); pointer-events: auto; }
   .story-step:last-child { margin-bottom: 0; }
   .story-step h2 { font-size: var(--step-lede); }
   .story-step p:not(.label) { font-size: var(--step-ui); line-height: 1.5; }
-  .story-link { margin-top: 0; }
+  .story-link { margin-top: var(--space-1); }
   .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.32)); }
+  /* app.js refines --zoom and --cam-lift to fit the focused layer between the header and the cards. */
   .stack-grid { --cam-lift: calc(.28 * (100svh - var(--header-h))); }
   .section-head { grid-template-columns: minmax(0, 1fr); }
   .project-row { grid-template-columns: minmax(0, 1fr); }
@@ -640,8 +684,8 @@ p, li, dd { text-wrap: pretty; }
   .nav-links.open { display: flex; animation: fade-in .25s; }
   .nav-links a { padding-block: 0; font-family: var(--serif); font-size: var(--step-h2); color: var(--ink); }
   .nav-links .contact-nav { margin-top: var(--space-2); font-size: var(--step-ui); }
-  .hero-label span { display: block; }
-  .hero-label .sep { display: none; }
+  .label-pair > span { display: block; }
+  .label-pair > .sep { display: none; }
   .facts { grid-template-columns: minmax(0, 1fr); }
   .stack-grid { --zoom: 1.4; grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
   .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.14)); }
@@ -649,7 +693,9 @@ p, li, dd { text-wrap: pretty; }
   .stack-project { padding-left: var(--space-4); font-size: var(--step-ui); }
   .stack-project::before { width: var(--space-3); }
   .footer-main { flex-direction: column; align-items: flex-start; }
-  .footer-bottom { flex-direction: column; align-items: flex-start; }
+  .footer-bottom { flex-direction: column; align-items: stretch; }
+  .footer-place { margin-left: 0; }
+  .footer-controls { justify-content: space-between; }
   .journal-card { grid-template-columns: minmax(0, 1fr) 1.5rem; gap: var(--space-4); }
   .journal-date { grid-column: 1 / -1; flex-direction: row; gap: var(--space-4); }
 }
@@ -663,6 +709,32 @@ p, li, dd { text-wrap: pretty; }
 }
 .no-js :is(.motion-toggle, .journal-tools, #print-cv) { display: none; }
 
+/* A screen too short to hold the whole figure, such as a phone on its side or a short window, reads
+   the story in order instead: the figure in place, then the four descriptions. app.js leaves the
+   layers unfocused while the figure is not pinned. */
+@media (max-height: 32rem), (min-width: 40.0625rem) and (max-height: 40rem) {
+  .hero-copy { min-height: 0; }
+  .story-figure { position: static; height: auto; overflow: visible; }
+  .stack { width: min(100%, 30rem); }
+  .story-step { min-height: 0; }
+}
+@media (max-width: 52rem) and (max-height: 32rem), (min-width: 40.0625rem) and (max-width: 52rem) and (max-height: 40rem) {
+  .story-figure { grid-row: 2; }
+  .story-steps { padding: var(--space-6) 0 var(--space-8); }
+  .story-step { margin-bottom: var(--space-4); }
+}
+@media (min-width: 52.0625rem) and (max-height: 40rem) {
+  .story-figure { grid-row: 1; padding-block: var(--space-6); }
+  .story-steps { grid-column: 1 / -1; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-7); padding-block: var(--space-6) var(--space-8); }
+  .story-step { justify-content: flex-start; }
+  .story-step h2 { font-size: var(--step-lede); }
+}
+
+/* Footer controls get a full-size target on touch screens. */
+@media (pointer: coarse) {
+  .footer-controls :is(a, button) { min-height: 2.75rem; }
+}
+
 /* Print */
 
 @media print {
@@ -671,9 +743,11 @@ p, li, dd { text-wrap: pretty; }
   body::after, .site-header, .site-footer, .cv-sidebar, .page-actions, .skip, .reading-progress, .stack-flow { display: none !important; }
   .wrap { width: 100%; }
   .story-figure { position: static; height: auto; }
+  .stack, .stack * { animation: none !important; } /* print the figure at rest, even if it never scrolled into view */
   .page-intro { padding: 0 0 12pt; }
   .page-intro h1 { font-size: 28pt; }
   .page-intro .lede { font-size: 13pt; }
+  .cv-contact { display: block; margin-top: 6pt; font-size: 10pt; color: var(--muted); }
   .cv-layout { display: block; padding-top: 12pt; }
   .cv-section { margin-bottom: 12pt; padding-bottom: 12pt; }
   .cv-section h2 { font-size: 16pt; }

@@ -96,10 +96,51 @@
   if (story) {
     const steps = $$('.story-step', story);
     const figure = $('.story-figure', story);
+    const stack = $('.stack', story);
+    const grid = $('.stack-grid', story);
     const narrow = window.matchMedia('(max-width: 52rem)');
+    // On a screen too short to pin the figure, the story reads in order and no layer is focused.
+    const pinned = () => getComputedStyle(figure).position === 'sticky';
+    // On narrow screens each description crosses the figure as a card. For each layer, zoom and
+    // place the camera so the layer sits centered between the header and its card, with the card
+    // held fully on screen. Layout sizes ignore the camera's transform, so this can run any time.
+    let shots = [];
+    const aim = () => {
+      const shot = shots[story.dataset.step];
+      if (shot) {
+        grid.style.setProperty('--zoom', shot.zoom);
+        grid.style.setProperty('--cam-lift', shot.lift);
+      } else if (!shots.length) {
+        grid.style.removeProperty('--zoom');
+        grid.style.removeProperty('--cam-lift');
+      }
+    };
+    const fit = () => {
+      shots = [];
+      if (narrow.matches && pinned()) {
+        const margin = 12;
+        const top = parseFloat(getComputedStyle(figure).top); // the header's height
+        const width = parseFloat(getComputedStyle(grid).gridTemplateColumns.split(' ')[1]);
+        const plate = width * 134 / 244; // a plate's height before zooming: its viewBox in build.py
+        const face = parseFloat(getComputedStyle(grid).getPropertyValue('--face'));
+        const center = top + (figure.offsetHeight - stack.offsetHeight) / 2 + grid.offsetTop + grid.offsetHeight / 2;
+        shots = steps.map(step => {
+          const room = [top + margin, top + figure.offsetHeight - step.offsetHeight - 2 * margin];
+          const zoom = Math.min(1.6, (innerWidth - 2 * margin) / width, (room[1] - room[0]) / plate);
+          const faceY = (room[0] + room[1]) / 2 + (face - .5) * plate * zoom;
+          return { zoom: zoom.toFixed(3), lift: `${(center - faceY).toFixed(1)}px` };
+        });
+      }
+      aim();
+    };
     let queued = false;
     const focus = () => {
       queued = false;
+      if (!pinned()) {
+        delete story.dataset.step;
+        figure.inert = false;
+        return;
+      }
       // The reading line sits mid-screen, or low on narrow screens, so a layer comes into focus as
       // its card rises over the figure.
       const line = innerHeight * (narrow.matches ? .85 : .55);
@@ -107,10 +148,20 @@
       if (read) story.dataset.step = read - 1; else delete story.dataset.step;
       // The figure's labels are hidden while a layer is in focus, so take it out of reach.
       figure.inert = read > 0;
+      aim();
     };
     window.addEventListener('scroll', () => { if (!queued) { queued = true; requestAnimationFrame(focus); } }, { passive: true });
-    window.addEventListener('resize', focus);
+    window.addEventListener('resize', () => { fit(); focus(); });
+    // The cards' heights depend on the web fonts, so fit again once they load.
+    document.fonts?.ready.then(fit);
+    fit();
     focus();
+  }
+
+  // Fig. 1 animates only while it is on screen.
+  const figureStack = $('.stack');
+  if (figureStack && 'IntersectionObserver' in window) {
+    new IntersectionObserver(([entry]) => figureStack.classList.toggle('idle', !entry.isIntersecting)).observe(figureStack);
   }
 
   const progress = $('.reading-progress');
