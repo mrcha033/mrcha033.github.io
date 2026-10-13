@@ -85,7 +85,7 @@
         card.hidden = !visible;
         if (visible) count++;
       });
-      $('#journal-count').textContent = `${count} note${count === 1 ? '' : 's'}`;
+      $('#journal-count').textContent = `${count} ${count === 1 ? 'piece' : 'pieces'}`;
       $('#empty-state').hidden = count !== 0;
       filters.forEach(b => b.setAttribute('aria-pressed', String(b.dataset.filter === category)));
     };
