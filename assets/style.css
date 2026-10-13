@@ -34,14 +34,16 @@
   --serif: Scholar, Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
   --serif-ko: 'Scholar KR', 'Noto Serif KR', 'Noto Serif CJK KR', AppleMyungjo, 'Nanum Myeongjo', Batang, serif;
 
-  /* Type scale: seven steps, fluid between small and wide viewports */
-  --step-meta: .875rem;                                    /* 14px  labels, dates, captions */
-  --step-ui: 1rem;                                         /* 16px  nav, buttons, data */
-  --step-body: clamp(1.0625rem, 1rem + .25vw, 1.1875rem);  /* 17–19 prose */
-  --step-lede: clamp(1.25rem, 1.08rem + .7vw, 1.625rem);   /* 20–26 ledes, h3 */
-  --step-h2: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);      /* 28–44 */
-  --step-h1: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);        /* 40–72 */
-  --step-display: clamp(3.5rem, 2rem + 6vw, 6.5rem);       /* 56–104 the name */
+  /* Type scale: seven steps, fluid between small and wide viewports. Each step is one level and
+     serves the same kind of text on every page. Neighboring steps stay at least an eighth apart
+     at every width, so two levels never look like one. */
+  --step-meta: .875rem;                                     /* 14px  labels, dates, captions */
+  --step-ui: 1rem;                                          /* 16px  navigation, buttons, links, data */
+  --step-body: clamp(1.125rem, 1.0625rem + .2vw, 1.1875rem); /* 18–19 reading text */
+  --step-lede: clamp(1.375rem, 1.2rem + .6vw, 1.625rem);    /* 22–26 ledes, titles of items */
+  --step-h2: clamp(1.75rem, 1.3rem + 1.9vw, 2.75rem);       /* 28–44 section titles */
+  --step-h1: clamp(2.5rem, 1.6rem + 3.6vw, 4.5rem);         /* 40–72 page titles */
+  --step-display: clamp(3.5rem, 2rem + 6vw, 6.5rem);        /* 56–104 the name */
 
   --track-tight: -.02em;
   --track-display: -.03em;
@@ -60,6 +62,7 @@
 
   --gutter: clamp(1.25rem, 4vw, 3.5rem);
   --measure: 40rem;
+  --grid: minmax(0, 1fr) minmax(0, 2fr); /* titles and content, below the story */
   --header-h: 4.5rem;
   --ease: cubic-bezier(.22, 1, .36, 1);
 }
@@ -207,11 +210,12 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
    marks the description being read with data-step on .story, and the figure focuses that layer. */
 
 .story { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.05fr); column-gap: var(--space-7); }
-.hero-copy { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; justify-content: center; min-height: calc(100svh - var(--header-h)); padding-block: var(--space-7); }
-.hero-name { margin: var(--space-4) 0 var(--space-6); font-size: var(--step-display); line-height: .98; letter-spacing: var(--track-display); }
+.hero-copy { grid-column: 1; grid-row: 1; display: flex; flex-direction: column; justify-content: center; min-height: calc(100svh - var(--header-h)); padding-block: var(--space-7); container-type: inline-size; }
+/* The name stays on one line: 18.5cqi is just under the size at which it fills its column. */
+.hero-name { margin: var(--space-4) 0 var(--space-6); font-size: min(var(--step-display), 18.5cqi); line-height: .98; letter-spacing: var(--track-display); }
 .hero-lede { max-width: 26ch; font-size: var(--step-lede); line-height: 1.35; text-wrap: balance; }
 .hero-text { max-width: 40ch; margin-top: var(--space-4); color: var(--muted); }
-.hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
+.hero-actions { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
 .story-figure { grid-column: 2; grid-row: 1 / 3; align-self: start; position: sticky; top: var(--header-h); display: flex; align-items: center; height: calc(100svh - var(--header-h)); overflow: hidden; }
 .story-steps { grid-column: 1; grid-row: 2; margin: 0; padding: 0 0 var(--space-8); list-style: none; }
 .story-step { display: flex; flex-direction: column; justify-content: center; gap: var(--space-4); max-width: 34rem; min-height: 80svh; transition: opacity .5s var(--ease); }
@@ -301,7 +305,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   padding-block: var(--space-2); /* a taller target for a finger; the rows are taller still */
   padding-left: calc(var(--space-5) + var(--space-2));
   font-family: var(--serif);
-  font-size: var(--step-body);
+  font-size: var(--step-ui);
   line-height: 1.25;
   transition: opacity .3s, color .2s;
 }
@@ -398,22 +402,25 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .story[data-step="2"] .plate[data-layer="2"],
 .story[data-step="3"] .plate[data-layer="3"] { opacity: 1; }
 
-/* Home: facts, sections, projects */
+/* Home: facts, sections, projects.
+   Below the story every page uses one grid on wide screens: a third for titles, two thirds for
+   content (--grid), with the same gap, so content starts on the same line from section to section
+   and page to page. The facts' second column starts on that line too. */
 
-.facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); padding-block: var(--space-5); border-block: 1px solid var(--line); }
+.facts { display: grid; grid-template-columns: calc((100% - var(--space-6)) / 3) repeat(2, minmax(0, 1fr)); gap: var(--space-4) var(--space-6); padding-block: var(--space-5); border-block: 1px solid var(--line); }
 .facts div { display: grid; align-content: start; gap: var(--space-1); }
 .facts dd { font-size: var(--step-ui); line-height: 1.5; }
 
 .section { padding-block: var(--space-9); }
 .section-ruled { border-top: 1px solid var(--line); }
-.section-head { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); align-items: baseline; gap: var(--space-4) var(--space-6); margin-bottom: var(--space-7); }
+.section-head { display: grid; grid-template-columns: var(--grid); align-items: baseline; gap: var(--space-4) var(--space-6); margin-bottom: var(--space-7); }
 .section-head:last-child { margin-bottom: 0; }
 .section-head h2 { font-size: var(--step-h2); }
 .section-intro { max-width: var(--measure); }
 .section-tail { display: flex; justify-content: flex-end; padding-top: var(--space-5); }
 
 .project-list { position: relative; isolation: isolate; border-top: 1px solid var(--line); }
-.project-row { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-2) var(--space-6); padding-block: var(--space-6); border-bottom: 1px solid var(--line); }
+.project-row { position: relative; display: grid; grid-template-columns: var(--grid); gap: var(--space-2) var(--space-6); padding-block: var(--space-6); border-bottom: 1px solid var(--line); }
 .project-row::before { content: ''; position: absolute; inset: 0 calc(-1 * var(--space-4)); z-index: -1; background: var(--paper-deep); opacity: 0; transition: opacity .3s; }
 .project-row:hover::before { opacity: 1; }
 .project-name { grid-row: 1 / 3; }
@@ -425,23 +432,25 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .project-row > .arrow { position: absolute; top: calc(var(--space-6) + .35rem); right: 0; }
 .project-row:hover > .arrow { transform: translateX(3px); }
 
-.oss-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-6) var(--space-7); }
-.oss-item { padding-top: var(--space-5); border-top: 1px solid var(--line); }
-.oss-item h3 { margin-bottom: var(--space-3); font-size: var(--step-lede); }
+.oss-list { border-top: 1px solid var(--line); }
+.oss-item { display: grid; grid-template-columns: var(--grid); align-items: baseline; gap: var(--space-3) var(--space-6); padding-block: var(--space-6); border-bottom: 1px solid var(--line); }
+.oss-item:last-child { padding-bottom: 0; border-bottom: 0; } /* the next section's rule closes the list */
+.oss-item h3 { font-size: var(--step-lede); }
+.oss-body { max-width: var(--measure); }
 .about-copy { display: grid; gap: var(--space-4); max-width: var(--measure); }
 
 /* Footer */
 
-/* The footer's rules sit inside the page margins, like every other rule. The email is a block so its
-   underline lines up with the links' underlines. */
-.footer-main { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-6); padding-block: var(--space-8) var(--space-7); border-top: 1px solid var(--line); }
+/* The footer's rules sit inside the page margins, like every other rule. The email and the links
+   share a baseline. */
+.footer-main { display: flex; flex-wrap: wrap; align-items: flex-end; align-items: last baseline; justify-content: space-between; gap: var(--space-6); padding-block: var(--space-8) var(--space-7); border-top: 1px solid var(--line); }
 .footer-contact .label { margin-bottom: var(--space-3); }
 .footer-email { display: block; width: fit-content; max-width: 100%; font-family: var(--serif); font-size: var(--step-h2); line-height: 1.2; letter-spacing: var(--track-tight); border-bottom: 1px solid var(--line-strong); transition: border-color .2s; overflow-wrap: anywhere; }
 .footer-email:hover { border-color: currentColor; }
 .footer-links { display: flex; flex-wrap: wrap; gap: var(--space-3) var(--space-5); }
-.footer-bottom { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); padding-block: var(--space-5); border-top: 1px solid var(--line); font-size: var(--step-meta); color: var(--muted); }
+.footer-bottom { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3) var(--space-5); padding-block: var(--space-5); border-top: 1px solid var(--line); font-size: var(--step-meta); color: var(--muted); }
 .footer-place { margin-left: auto; }
-.footer-controls { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-3) var(--space-5); }
+.footer-controls { display: flex; flex-wrap: wrap; align-items: baseline; gap: var(--space-3) var(--space-5); }
 .footer-bottom a:hover { color: var(--ink); }
 .footer-controls :is(a, button) { min-height: 1.5rem; }
 .to-top { display: inline-flex; align-items: center; gap: var(--space-1); }
@@ -455,9 +464,10 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 
 /* Inner pages */
 
-.page-intro { padding-block: var(--space-8) var(--space-7); border-bottom: 1px solid var(--line); }
+.page-intro { padding-block: var(--space-8) var(--space-7); border-bottom: 1px solid var(--line); container-type: inline-size; }
 .page-intro h1 { max-width: 20ch; margin-top: var(--space-4); font-size: var(--step-h1); }
 .page-intro .lede { max-width: 44ch; margin-top: var(--space-5); font-size: var(--step-lede); line-height: 1.45; color: var(--muted); }
+.page-intro .page-note { max-width: var(--measure); margin-top: var(--space-4); color: var(--muted); }
 .page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
 .page-missing { padding-bottom: var(--space-9); border-bottom: 0; }
 .name-ko { margin-left: .2em; font-family: var(--serif-ko); font-size: var(--step-lede); letter-spacing: 0; color: var(--muted); }
@@ -465,19 +475,21 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 
 /* Research */
 
-.research-entry { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); gap: var(--space-5) var(--space-6); padding-block: var(--space-8); border-bottom: 1px solid var(--line); scroll-margin-top: var(--header-h); }
+/* Each title spans the grid, and its date and topics sit beside the body, on the body's first
+   baseline. The title carries the anchor, so a link to a thread lands it just below the header. */
+.research-entry { display: grid; grid-template-columns: var(--grid); align-items: baseline; gap: var(--space-5) var(--space-6); padding-block: var(--space-8); border-bottom: 1px solid var(--line); }
 .research-entry:last-child { border-bottom: 0; }
-.entry-aside { position: sticky; top: calc(var(--header-h) + var(--space-6)); align-self: start; }
-.entry-aside h2 { margin-bottom: var(--space-3); font-size: var(--step-h2); }
+.research-entry > h2 { grid-column: 1 / -1; font-size: var(--step-h2); }
+.entry-aside { grid-column: 1; }
 .tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: var(--space-4) 0 0; padding: 0; list-style: none; }
 .tags li { padding: .125rem var(--space-2); border: 1px solid var(--line); border-radius: 2px; font-size: var(--step-meta); color: var(--muted); }
-.entry-body { min-width: 0; }
+.entry-body { grid-column: 2; min-width: 0; }
 .entry-body > * + * { margin-top: var(--space-5); }
 .entry-body > .oss-block + .oss-block { margin-top: var(--space-7); }
 .entry-text { max-width: var(--measure); }
 .entry-status { font-size: var(--step-ui); color: var(--muted); }
-.entry-subtitle { max-width: 30ch; font-size: var(--step-lede); line-height: 1.4; }
-.entry-points { max-width: var(--measure); margin: 0; padding-left: 1.1em; }
+.entry-subtitle { max-width: 36ch; font-size: var(--step-lede); line-height: 1.4; }
+.entry-points { max-width: var(--measure); margin: 0; padding-left: 0; } /* bullets hang in the gutter */
 .entry-points li + li { margin-top: var(--space-3); }
 .entry-points li::marker { color: var(--accent); }
 .oss-block h3 { font-size: var(--step-lede); }
@@ -525,14 +537,17 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 
 /* CV */
 
-.cv-layout { display: grid; grid-template-columns: 11rem minmax(0, 1fr); gap: var(--space-8); padding-block: var(--space-7) var(--space-9); }
-.cv-sidebar { position: sticky; top: calc(var(--header-h) + var(--space-6)); align-self: start; display: flex; flex-direction: column; gap: var(--space-2); font-size: var(--step-ui); }
-.cv-sidebar a { padding-block: var(--space-1); color: var(--muted); transition: color .2s; }
-.cv-sidebar a:hover { color: var(--ink); }
-.cv-main { min-width: 0; max-width: 48rem; }
-.cv-section { margin-bottom: var(--space-7); padding-bottom: var(--space-7); border-bottom: 1px solid var(--line); scroll-margin-top: calc(var(--header-h) + var(--space-5)); }
-.cv-section:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: 0; }
-.cv-section h2 { margin-bottom: var(--space-5); font-size: var(--step-lede); letter-spacing: 0; }
+/* The section links run across the top. Each section is a row of the grid: its title on the left,
+   on the first entry's baseline, and its entries on the right. */
+.cv-nav { display: flex; flex-wrap: wrap; gap: var(--space-1) var(--space-5); padding-block: var(--space-5); border-bottom: 1px solid var(--line); font-size: var(--step-ui); }
+.cv-nav a { padding-block: var(--space-1); color: var(--muted); transition: color .2s; }
+.cv-nav a:hover { color: var(--ink); }
+.cv-section { display: grid; grid-template-columns: var(--grid); align-items: baseline; gap: var(--space-5) var(--space-6); padding-block: var(--space-7); border-bottom: 1px solid var(--line); }
+.cv-section:last-child { padding-bottom: var(--space-9); border-bottom: 0; }
+.cv-section h2 { font-size: var(--step-lede); letter-spacing: 0; }
+/* Entries fill the column, so dates end on the page's right edge; their text keeps the measure. */
+.cv-entries { min-width: 0; }
+.cv-entries :is(p, dd) { max-width: var(--measure); }
 .cv-intro { margin-bottom: var(--space-5); color: var(--muted); }
 .cv-item + .cv-item { margin-top: var(--space-5); }
 .cv-item-head { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: var(--space-1) var(--space-4); }
@@ -645,7 +660,12 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 
 @media (max-width: 64rem) {
   .story { column-gap: var(--space-6); }
-  .cv-layout { grid-template-columns: 9rem minmax(0, 1fr); gap: var(--space-6); }
+  /* Below this width a third is too narrow for a title, so titles sit above their content. */
+  :root { --grid: minmax(0, 1fr); }
+  .facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .project-name { grid-row: auto; padding-right: var(--space-6); }
+  .project-desc, .project-result, .entry-aside, .entry-body { grid-column: 1; }
+  .entry-points { padding-left: 1.1em; }
 }
 
 @media (max-width: 52rem) {
@@ -663,15 +683,6 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.32)); }
   /* app.js refines --zoom and --cam-lift to fit the focused layer between the header and the cards. */
   .stack-grid { --cam-lift: calc(.28 * (100svh - var(--header-h))); }
-  .section-head { grid-template-columns: minmax(0, 1fr); }
-  .project-row { grid-template-columns: minmax(0, 1fr); }
-  .project-name { grid-row: auto; padding-right: var(--space-6); }
-  .project-desc, .project-result { grid-column: 1; }
-  .oss-list { grid-template-columns: minmax(0, 1fr); }
-  .research-entry { grid-template-columns: minmax(0, 1fr); }
-  .entry-aside { position: static; }
-  .cv-layout { grid-template-columns: minmax(0, 1fr); gap: var(--space-6); }
-  .cv-sidebar { position: static; flex-direction: row; flex-wrap: wrap; gap: var(--space-1) var(--space-5); padding-bottom: var(--space-5); border-bottom: 1px solid var(--line); }
 }
 
 @media (max-width: 40rem) {
@@ -684,14 +695,14 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   .nav-links.open { display: flex; animation: fade-in .25s; }
   .nav-links a { padding-block: 0; font-family: var(--serif); font-size: var(--step-h2); color: var(--ink); }
   .nav-links .contact-nav { margin-top: var(--space-2); font-size: var(--step-ui); }
-  .label-pair > span { display: block; }
-  .label-pair > .sep { display: none; }
   .facts { grid-template-columns: minmax(0, 1fr); }
   .stack-grid { --zoom: 1.4; grid-template-columns: minmax(min-content, .75fr) minmax(0, 1.6fr) minmax(min-content, .75fr); }
   .stack { width: min(100%, calc((100svh - var(--header-h) - 6rem) / 1.14)); }
   .stack-name::after { flex-basis: var(--space-2); }
-  .stack-project { padding-left: var(--space-4); font-size: var(--step-ui); }
+  .stack-project { padding-left: var(--space-4); }
   .stack-project::before { width: var(--space-3); }
+  /* On phones a date always sits under its title, rather than beside it only when the title is short. */
+  .cv-item-head { flex-direction: column; gap: 0; }
   .footer-main { flex-direction: column; align-items: flex-start; }
   .footer-bottom { flex-direction: column; align-items: stretch; }
   .footer-place { margin-left: 0; }
@@ -730,6 +741,12 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   .story-step h2 { font-size: var(--step-lede); }
 }
 
+/* A two-part label stacks when its column is too narrow to hold it on one line. */
+@container (max-width: 28rem) {
+  .label-pair > span { display: block; }
+  .label-pair > .sep { display: none; }
+}
+
 /* Footer controls get a full-size target on touch screens. */
 @media (pointer: coarse) {
   .footer-controls :is(a, button) { min-height: 2.75rem; }
@@ -738,21 +755,23 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 /* Print */
 
 @media print {
-  :root { --paper: #fff; --paper-deep: #fff; --ink: #000; --muted: #444; --line: #ccc; --line-strong: #999; }
-  body { background: #fff; color: #000; font-size: 10.5pt; }
-  body::after, .site-header, .site-footer, .cv-sidebar, .page-actions, .skip, .reading-progress, .stack-flow { display: none !important; }
+  /* Paper keeps the same levels, set in points. */
+  :root {
+    --paper: #fff; --paper-deep: #fff; --ink: #000; --muted: #444; --line: #ccc; --line-strong: #999;
+    --step-meta: 8.5pt; --step-ui: 9.5pt; --step-body: 10.5pt; --step-lede: 13pt; --step-h2: 16pt; --step-h1: 26pt; --step-display: 32pt;
+  }
+  body { background: #fff; color: #000; }
+  body::after, .site-header, .site-footer, .cv-nav, .page-actions, .skip, .reading-progress, .stack-flow { display: none !important; }
   .wrap { width: 100%; }
   .story-figure { position: static; height: auto; }
   .stack, .stack * { animation: none !important; } /* print the figure at rest, even if it never scrolled into view */
   .page-intro { padding: 0 0 12pt; }
-  .page-intro h1 { font-size: 28pt; }
-  .page-intro .lede { font-size: 13pt; }
-  .cv-contact { display: block; margin-top: 6pt; font-size: 10pt; color: var(--muted); }
-  .cv-layout { display: block; padding-top: 12pt; }
-  .cv-section { margin-bottom: 12pt; padding-bottom: 12pt; }
-  .cv-section h2 { font-size: 16pt; }
+  .cv-contact { display: block; margin-top: 6pt; font-size: var(--step-ui); color: var(--muted); }
+  .cv-section { padding-block: 12pt; }
+  .cv-section:last-child { padding-bottom: 0; }
   .cv-item { break-inside: avoid; }
   .cv-link:not(.link-row) { display: none; }
   .reveal.ready { opacity: 1; transform: none; }
   a[href^="mailto"]::after { content: ' (' attr(href) ')'; font-size: 9pt; }
 }
+

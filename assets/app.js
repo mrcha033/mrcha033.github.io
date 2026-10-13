@@ -52,6 +52,10 @@
 
   // Sections fade in as they arrive.
   if ('IntersectionObserver' in window && !paused) {
+    // The element a link points to never waits to fade in: shifting it would move it off the spot the
+    // browser scrolled it to. A malformed fragment such as #% simply points nowhere.
+    let target = null;
+    try { target = document.getElementById(decodeURIComponent(location.hash.slice(1))); } catch {}
     const reveal = new IntersectionObserver(entries => {
       entries.forEach(e => {
         if (!e.isIntersecting) return;
@@ -61,7 +65,7 @@
     }, { threshold: .15 });
     $$('.reveal').forEach(el => {
       // Keep content already on-screen immediately available.
-      if (el.getBoundingClientRect().top > window.innerHeight - 30) {
+      if (el.getBoundingClientRect().top > window.innerHeight - 30 && !el.contains(target)) {
         el.classList.add('ready');
         reveal.observe(el);
       }
