@@ -7,8 +7,8 @@
 @font-face { font-family: Scholar; src: url('/assets/fonts/scholar-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
 /* Code: Nimbus Mono PS, URW's serif monospace from the same family as P052, subset to ASCII. */
 @font-face { font-family: 'Scholar Mono'; src: url('/assets/fonts/scholar-mono.woff2') format('woff2'); font-weight: 400; font-display: swap; }
-/* Korean: a Noto Serif KR subset holding only the syllables the site uses (scripts/fetch_korean_font.py). */
-@font-face { font-family: 'Scholar KR'; src: url('/assets/fonts/scholar-ko.woff2') format('woff2'); font-weight: 400; font-display: swap; unicode-range: U+AC00-D7A3; }
+/* Korean: Noto Serif KR as 'Scholar KR'. build.py gives each page a subset holding only the characters
+   on it, declared in the page's head; P052 still draws the Latin letters and punctuation among them. */
 
 :root {
   color-scheme: light dark;
@@ -39,9 +39,8 @@
   --grain-ink: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='1' height='1' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='8' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.16 0 0 0 -0.080'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
 
   /* Families */
-  --serif: Scholar, Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, serif;
-  --serif-ko: 'Scholar KR', 'Noto Serif KR', 'Noto Serif CJK KR', AppleMyungjo, 'Nanum Myeongjo', Batang, serif;
-  --mono: 'Scholar Mono', 'Nimbus Mono PS', 'Courier Prime', 'Courier New', Courier, monospace;
+  --serif: Scholar, 'Scholar KR', Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, 'Noto Serif KR', 'Noto Serif CJK KR', AppleMyungjo, 'Nanum Myeongjo', Batang, serif;
+  --mono: 'Scholar Mono', 'Nimbus Mono PS', 'Courier Prime', 'Courier New', Courier, 'Scholar KR', 'Noto Serif KR', monospace;
 
   /* Type scale: seven steps, fluid between small and wide viewports. Each step is one level and
      serves the same kind of text on every page. Neighboring steps stay at least an eighth apart
@@ -125,8 +124,11 @@ h1, h2, h3, p, figure, blockquote, dl, dd { margin: 0; }
 h1, h2, h3 { font-family: var(--serif); font-weight: 400; line-height: 1.12; letter-spacing: var(--track-tight); text-wrap: balance; }
 p, li, dd, figcaption { text-wrap: pretty; }
 /* Short blurbs of two or three lines break into even lines, so none ends on a word or two. */
-:is(.plate-figure figcaption, .pipeline p, .entry-role, .oss-body > p, .cv-item > p) { text-wrap: balance; }
-[lang="ko"] { font-family: var(--serif-ko); letter-spacing: 0; }
+:is(.plate-figure figcaption, .pipeline p, .entry-role, .oss-body > p, .cv-item > p, .page-intro .lede, .journal-card h2 + p, .article-next-title) { text-wrap: balance; }
+/* Korean breaks lines between words, as Korean books do, and is not tracked. Its titles get more
+   leading than Latin ones, since every syllable fills the height of the type. */
+[lang="ko"] { letter-spacing: 0; word-break: keep-all; overflow-wrap: break-word; }
+:is(h1, h2, h3):lang(ko) { line-height: 1.3; letter-spacing: 0; }
 [hidden] { display: none !important; }
 .nowrap { white-space: nowrap; }
 
@@ -457,7 +459,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .plate-figure { margin-top: var(--space-6); }
 .plate-image { display: block; padding: var(--space-5) var(--space-6); border: 1px solid var(--line); outline: 1px solid var(--line); outline-offset: -.4375rem; background: var(--grain), var(--paper-deep); }
 .plate-image img { display: block; width: 100%; height: auto; transition: transform .6s var(--ease); }
-@media (hover: hover) { .plate-image:hover img { transform: scale(1.015); } }
+@media (hover: hover) { a.plate-image:hover img { transform: scale(1.015); } }
 .plate-figure figcaption { margin-top: var(--space-3); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); }
 .plate-figure .fig-no { margin-right: var(--space-2); }
 /* hw-codesign's loop: three steps strung on one rule, like a flow drawn in the margin. */
@@ -498,7 +500,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .page-intro .page-note { max-width: var(--measure); margin-top: var(--space-4); color: var(--muted); }
 .page-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4) var(--space-6); margin-top: var(--space-6); }
 .page-missing { padding-bottom: var(--space-9); border-bottom: 0; }
-.name-ko { margin-left: .2em; font-family: var(--serif-ko); font-size: var(--step-lede); letter-spacing: 0; color: var(--muted); }
+.name-ko { margin-left: .2em; font-size: var(--step-lede); color: var(--muted); }
 .cv-contact { display: none; } /* printed only; on screen the footer carries it */
 
 /* Research */
@@ -562,10 +564,26 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .article-meta { position: sticky; top: calc(var(--header-h) + var(--space-5)); display: grid; gap: var(--space-4); }
 .article-byline { display: flex; justify-content: space-between; gap: var(--space-4); padding-bottom: var(--space-3); border-bottom: 1px solid var(--line); font-size: var(--step-meta); color: var(--muted); }
 .article-body { min-width: 0; line-height: 1.7; }
-.article-body > :is(p, h2, ul, ol, blockquote) { max-width: var(--measure); }
-.article-body > h2:first-child { margin-top: 0; }
+.article-body > :is(p, h2, h3, ul, ol, blockquote, hr) { max-width: var(--measure); }
+.article-body > :first-child { margin-top: 0; }
 .article-body > * + * { margin-top: var(--space-5); }
 .article-body h2 { margin-top: var(--space-7); font-size: var(--step-lede); }
+/* The third level is the text's own size, set in italic, and holds close to what follows it. Korean
+   has no italic, so a Korean one is set upright in the accent color instead. */
+.article-body h3 { margin-top: var(--space-6); font-size: var(--step-body); font-style: italic; line-height: 1.4; letter-spacing: 0; }
+.article-body h3:lang(ko) { font-style: normal; color: var(--accent); }
+.article-body > h3 + * { margin-top: var(--space-3); }
+/* List markers hang in the gutter, as on the research page, so the text keeps its edge. */
+.article-body :is(ul, ol) { margin-bottom: 0; padding-left: 0; }
+.article-body li + li, .article-body li > :is(ul, ol) { margin-top: var(--space-2); }
+.article-body li :is(ul, ol) { padding-left: 1.25em; }
+.article-body li::marker { color: var(--accent); }
+.article-body blockquote > * + * { margin-top: var(--space-3); }
+.article-body hr { height: 0; margin-block: var(--space-7) 0; border: 0; border-top: 1px solid var(--line); }
+.article-body hr + * { margin-top: var(--space-7); }
+.article-body img { max-width: 100%; height: auto; }
+/* A tall photo is held to the screen's height and centered on its plate. */
+.post-figure img { max-height: 80vh; object-fit: contain; }
 .article-body .formula { padding: var(--space-5) var(--space-4); border-block: 1px solid var(--line); font-size: var(--step-lede); text-align: center; overflow-x: auto; }
 .article-body blockquote { padding-left: var(--space-5); border-left: 2px solid var(--accent); font-size: var(--step-lede); line-height: 1.45; }
 .article-body .note-aside { padding-top: var(--space-4); border-top: 1px solid var(--line); font-size: var(--step-ui); color: var(--muted); }
@@ -586,11 +604,9 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .article-body th { padding: var(--space-2) var(--space-4) var(--space-2) 0; border-bottom: 1px solid var(--line); font-size: var(--step-meta); font-weight: 400; letter-spacing: var(--track-caps); text-align: left; text-transform: uppercase; color: var(--muted); }
 .article-body td { padding: var(--space-3) var(--space-4) var(--space-3) 0; border-top: 1px solid var(--line); vertical-align: baseline; }
 .article-body tbody tr:first-child td { border-top: 0; }
-.article-body :is(th, td).num { padding-right: 0; text-align: right; white-space: nowrap; }
-.article-body .cases { padding: 0; list-style: none; border-block: 1px solid var(--line); font-size: var(--step-ui); line-height: 1.5; }
-.article-body .cases li { display: grid; grid-template-columns: 6.5rem minmax(0, 1fr); align-items: baseline; gap: var(--space-4); padding-block: var(--space-2); }
-.article-body .cases li + li { border-top: 1px dotted var(--line-strong); }
-.article-body .cases span { color: var(--accent); }
+.article-body :is(th, td):last-child { padding-right: 0; }
+.article-body :is(th, td).num { text-align: right; white-space: nowrap; }
+.article-body :is(th, td).center { text-align: center; }
 
 /* CV */
 
@@ -726,6 +742,8 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   .project-name { grid-row: auto; padding-right: var(--space-6); }
   .project-desc, .project-result, .entry-aside, .entry-body { grid-column: 1; }
   .entry-points { padding-left: 1.1em; }
+  /* With no gutter to hang in, list text indents as far as a quotation's. */
+  .article-body :is(ul, ol) { padding-left: calc(var(--space-5) + 2px); }
   .journal-card > .arrow { top: calc(var(--space-6) + .2rem); }
   .article-meta { position: static; }
 }
@@ -766,7 +784,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   /* On phones a date always sits under its title, rather than beside it only when the title is short. */
   .cv-item-head { flex-direction: column; gap: 0; }
   .leader { display: none; }
-  .pipeline li, .article-body .cases li { grid-template-columns: minmax(0, 1fr); gap: 0; }
+  .pipeline li { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .article-body pre { font-size: var(--step-meta); }
   .plate-image { padding: var(--space-4); }
   .footer-main { flex-direction: column; align-items: flex-start; }

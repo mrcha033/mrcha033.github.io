@@ -1,0 +1,94 @@
+# Sveltia CMS reads this file. The admin page (/admin/) writes posts to content/writing/ and their
+# images to content/writing/media/ in this repository. Each save is a commit to main, after which
+# the deploy workflow builds the site and publishes it. README.md explains how to sign in.
+backend:
+  name: github
+  repo: mrcha033/yunmin-cha-website
+  branch: main
+  auth_methods: [token]
+  commit_messages:
+    create: 'Write "{{slug}}"'
+    update: 'Edit "{{slug}}"'
+    delete: 'Delete "{{slug}}"'
+    uploadMedia: 'Upload {{path}}'
+    deleteMedia: 'Delete {{path}}'
+
+site_url: https://mrcha033.github.io
+display_url: https://mrcha033.github.io
+logo:
+  src: /assets/favicon.svg
+
+# An uploaded photo is saved as WebP, at most 2000 pixels on a side. Converting it also drops the
+# metadata a camera stores, such as where the photo was taken; build.py strips it from any other file.
+media_folder: content/writing/media
+public_folder: /assets/writing
+media_libraries:
+  default:
+    config:
+      slugify_filename: true
+      transformations:
+        raster_image:
+          format: webp
+          quality: 85
+          width: 2000
+          height: 2000
+
+collections:
+  - name: writing
+    label: 글
+    label_singular: 글
+    description: Writing에 실리는 글입니다. 저장하면 몇 분 뒤 사이트에 반영되고, 초안은 공개되지 않습니다.
+    folder: content/writing
+    extension: md
+    format: frontmatter
+    create: true
+    slug: '{{slug}}'
+    preview_path: /writing/{{slug}}/
+    sortable_fields:
+      fields: [date, title]
+      default: { field: date, direction: descending }
+    view_filters:
+      - { label: 초안, field: draft, pattern: true }
+      - { label: Life, field: category, pattern: '^Life$' }
+      - { label: Note, field: category, pattern: '^Note$' }
+      - { label: Case study, field: category, pattern: '^Case study$' }
+    fields:
+      - { name: title, label: 제목, widget: string }
+      - { name: date, label: 날짜, widget: datetime, type: date, default: '{{now}}' }
+      - name: category
+        label: 분류
+        widget: select
+        options: [Life, Note, Case study]
+        default: Life
+        hint: Life는 근황과 일상, Note는 짧은 생각과 읽은 것, Case study는 연구나 오픈소스 작업을 풀어 쓴 글입니다.
+      - name: lang
+        label: 언어
+        widget: select
+        options:
+          - { label: 한국어, value: ko }
+          - { label: English, value: en }
+        default: ko
+      - name: summary
+        label: 요약
+        widget: text
+        required: false
+        hint: 글 목록과 제목 아래에 나오는 한두 문장입니다. 링크를 공유할 때의 설명으로도 쓰입니다.
+      - name: draft
+        label: 초안
+        widget: boolean
+        default: true
+        hint: 켜져 있으면 사이트에 올라가지 않습니다. 공개할 때 끄고 저장하세요. 이 글에만 쓰인 사진도 그때 함께 공개됩니다.
+      - name: facts
+        label: 요점 카드
+        label_singular: 항목
+        widget: list
+        required: false
+        collapsed: true
+        hint: 사례 글에서 본문 왼쪽에 붙는 카드입니다(예. Pull request, Tested on). 일상 글은 비워 두면 됩니다.
+        fields:
+          - { name: label, label: 이름, widget: string }
+          - { name: value, label: 내용, widget: string, hint: '링크 같은 Markdown을 쓸 수 있습니다.' }
+      - name: body
+        label: 본문
+        widget: richtext
+        hint: 사진은 이미지 버튼으로 올립니다. 대체 텍스트(alt)는 사진을 설명하고, 제목(title)을 적으면 사진 아래 캡션이 됩니다. 표나 코드가 많은 글은 Markdown 모드가 편합니다.
