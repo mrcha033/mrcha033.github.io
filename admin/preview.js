@@ -1,8 +1,9 @@
 // The admin page's preview pane, drawn with the site's stylesheet and the article page's markup, so a
 // post looks as it will on the site.
 CMS.registerPreviewStyle('/assets/style.css');
-// Each page of the site carries its own Korean subset; the preview takes the whole font instead.
-CMS.registerPreviewStyle('https://fonts.googleapis.com/css2?family=Noto+Serif+KR&display=swap');
+// Each page of the site carries its own Korean subset; the preview, like the editor, takes the whole font
+// in slices instead (ko-font.css).
+CMS.registerPreviewStyle('/admin/ko-font.css');
 // The editor wraps the text in containers of its own, so the article's spacing is applied to them
 // here; an image on a line of its own is shown on a plate, as build.py sets it.
 CMS.registerPreviewStyle(`

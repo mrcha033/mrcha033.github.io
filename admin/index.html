@@ -6,6 +6,9 @@
 <meta name="robots" content="noindex">
 <title>Admin — Yunmin Cha</title>
 <link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<!-- The editor in the site's type and paper; Korean in Noto Serif KR, from the font files ko-font.css lists. -->
+<link rel="stylesheet" href="/admin/ko-font.css">
+<link rel="stylesheet" href="/admin/editor.css">
 </head>
 <body>
 <!-- Sveltia CMS, pinned to one release and checked against its hash, since the page holds a token that
@@ -23,5 +26,7 @@
 "https://unpkg.com/@sveltia/cms@0.237.0/dist/chunks/assets/rolldown-runtime-B0Z9INg1.js":"sha384-uCuhBG6DIdgAvOeNaFe37hWRQ7YJZ6dBCRh7fRkwAfxJ9ECb9VDCyPGWWpcYRG7L"}}</script>
 <script src="https://unpkg.com/@sveltia/cms@0.237.0/dist/sveltia-cms.js" integrity="sha384-Bxt854HbLs2oIarLZ5ugq0+YaKn0gMREbBo9F6+z58nArGKhH7V3UBVsMiMBRH9B" crossorigin="anonymous"></script>
 <script src="/admin/preview.js"></script>
+<!-- Keeps bold before a Korean particle (**"가을"**이라는) bold when a post is saved again; see the file. -->
+<script src="/admin/editor.js"></script>
 </body>
 </html>

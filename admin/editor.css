@@ -1,0 +1,111 @@
+/* The admin page's editor, set like the site. A post's title, summary, and text are written in the site's
+   type, on its paper, and the rest of the page keeps the CMS's look. Sveltia CMS draws the editor in this
+   document: these rules find the fields by their data-key-path, the rich-text editor by .lexical-root, and
+   set the CMS's own --sui-textbox-* variables where its text boxes have two layers that must match (a
+   textarea and the copy drawn behind it). Check them when updating the CMS (README.md, "Admin page").
+   The values follow dist/assets/style.css. */
+
+@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-serif.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: Scholar; src: url('/assets/fonts/scholar-italic.woff2') format('woff2'); font-weight: 400; font-style: italic; font-display: swap; }
+@font-face { font-family: 'Scholar Mono'; src: url('/assets/fonts/scholar-mono.woff2') format('woff2'); font-weight: 400; font-display: swap; }
+/* Korean: 'Scholar KR' comes from ko-font.css. */
+
+.field:is([data-key-path="title"], [data-key-path="summary"], [data-key-path="body"]) {
+  --paper: #f5f1e8;
+  --paper-deep: #eee8dc;
+  --ink: #2f2721;
+  --muted: #675d52;
+  --line: #d8cebf;
+  --line-strong: #a99c8b;
+  --accent: #855f40;
+  --selection: #dcc9ad;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='1' height='1' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 -0.26 0 0 0 0.130'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+  --serif: Scholar, 'Scholar KR', Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, 'Noto Serif KR', 'Noto Serif CJK KR', AppleMyungjo, 'Nanum Myeongjo', Batang, serif;
+  --mono: 'Scholar Mono', 'Nimbus Mono PS', 'Courier Prime', 'Courier New', Courier, 'Scholar KR', 'Noto Serif KR', monospace;
+  --sui-focus-ring-color: var(--accent);
+}
+/* The CMS's own light or dark setting, which follows the device unless changed in its settings. */
+:root[data-theme="dark"] .field:is([data-key-path="title"], [data-key-path="summary"], [data-key-path="body"]) {
+  --paper: #1b1714;
+  --paper-deep: #221d19;
+  --ink: #ece5d8;
+  --muted: #ab9f90;
+  --line: #3a322b;
+  --line-strong: #62574b;
+  --accent: #cf9f72;
+  --selection: #4a3a2c;
+  --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='1' height='1' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.18 0 0 0 -0.090'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
+}
+
+/* The title and summary, as the article's title and lede read, and the text in Markdown mode in the
+   site's code type */
+:is(.field[data-key-path="title"] .text-input, .field[data-key-path="summary"] .text-area, .field[data-key-path="body"] .text-editor > .text-area) {
+  --sui-textbox-foreground-color: var(--ink);
+  --sui-textbox-background-color: var(--paper);
+  --sui-textbox-font-family: var(--serif);
+}
+.field[data-key-path="title"] .text-input { --sui-textbox-font-size: 1.75rem; --sui-textbox-height: auto; --sui-textbox-singleline-line-height: 1.25; --sui-textbox-singleline-padding: .35em .5em; --sui-textbox-letter-spacing: -.02em; }
+.field[data-key-path="summary"] .text-area { --sui-textbox-font-size: 1.25rem; --sui-textbox-multiline-line-height: 1.5; }
+.field[data-key-path="body"] .text-editor > .text-area { --sui-textbox-font-family: var(--mono); --sui-textbox-font-size: .9375rem; --sui-textbox-multiline-line-height: 1.6; }
+/* Paper grain on whichever layer shows: the box itself, or the copy behind Markdown mode's clear textarea */
+:is(.field[data-key-path="title"] input, .field[data-key-path="summary"] textarea, .field[data-key-path="body"] .text-area .clone) { background-image: var(--grain); }
+
+/* The text, as the article's body reads */
+.field[data-key-path="body"] .lexical-root {
+  padding: 2rem 2.25rem 2.5rem;
+  min-height: 24rem;
+  color: var(--ink);
+  background: var(--grain), var(--paper);
+  font-family: var(--serif);
+  font-size: 1.125rem;
+  line-height: 1.7;
+  overflow-wrap: break-word;
+  font-synthesis-style: none; /* P052 has an italic; Korean, which has none, stays upright */
+}
+.field[data-key-path="body"] .lexical-root ::selection { background: var(--selection); color: var(--ink); }
+.field[data-key-path="body"] .lexical-root > * { margin: 0; }
+.field[data-key-path="body"] .lexical-root > * + *, .field[data-key-path="body"] .lexical-root > .code-block:not(:first-child) { margin-top: 1.5rem; }
+.field[data-key-path="body"] .lexical-root > .code-block { margin-bottom: 0; }
+.field[data-key-path="body"] .lexical-root > :is(h1, h2, h3, h4, h5, h6) { font-family: var(--serif); font-weight: 400; color: var(--ink); text-wrap: balance; }
+/* # and ## are the article's section titles, deeper headings its third level, as build.py sets them */
+.field[data-key-path="body"] .lexical-root > :is(h1, h2) { font-size: 1.375rem; line-height: 1.12; letter-spacing: -.02em; }
+.field[data-key-path="body"] .lexical-root > :is(h1, h2):not(:first-child) { margin-top: 3rem; }
+.field[data-key-path="body"] .lexical-root > :is(h3, h4, h5, h6) { font-size: 1.125rem; font-style: italic; line-height: 1.4; letter-spacing: 0; }
+.field[data-key-path="body"] .lexical-root > :is(h3, h4, h5, h6):not(:first-child) { margin-top: 2rem; }
+.field[data-key-path="body"] .lexical-root > :is(h3, h4, h5, h6) + * { margin-top: .75rem; }
+.field[data-key-path="body"] .lexical-root :is(ul, ol) { padding-left: calc(1.5rem + 2px); }
+.field[data-key-path="body"] .lexical-root li + li, .field[data-key-path="body"] .lexical-root li > :is(ul, ol) { margin-top: .5rem; }
+.field[data-key-path="body"] .lexical-root li::marker { color: var(--accent); }
+.field[data-key-path="body"] .lexical-root blockquote { padding-left: 1.5rem; border-left: 2px solid var(--accent); color: var(--ink); font-size: 1.375rem; line-height: 1.45; }
+.field[data-key-path="body"] .lexical-root a:not(.component *) { color: inherit; text-decoration: underline 1px var(--line-strong); text-underline-offset: .22em; }
+.field[data-key-path="body"] .lexical-root strong:not(.component *) { font-weight: 700; }
+.field[data-key-path="body"] .lexical-root code:not(.code-block, .component *) { padding: 0; border: 0; background: none; color: inherit; font-family: var(--mono); font-size: .9em; -webkit-text-stroke: .02em currentColor; }
+/* A code block keeps the editor's line numbers, set on the site's code plate, without highlighting. */
+.field[data-key-path="body"] .lexical-root .code-block { padding-block: 1rem; padding-inline-end: 1.5rem; border-left: 2px solid var(--line-strong); color: var(--ink); background: var(--grain), var(--paper-deep); font-family: var(--mono); font-size: 1rem; line-height: 1.55; -webkit-text-stroke: .02em currentColor; }
+.field[data-key-path="body"] .lexical-root .code-block::before { padding-block: 1rem; background: none; color: var(--line-strong); }
+.field[data-key-path="body"] .lexical-root .code-block span { color: inherit !important; }
+/* A table ruled like a journal's, as on the site; a selected cell keeps the editor's highlight. */
+.field[data-key-path="body"] .lexical-root table { border-collapse: collapse; border-top: 1.5px solid var(--line-strong); border-bottom: 1.5px solid var(--line-strong); font-size: 1rem; line-height: 1.45; }
+.field[data-key-path="body"] .lexical-root :is(th, td) { padding: .75rem 1rem .75rem 0; border: 0; border-top: 1px solid var(--line); background-color: transparent; vertical-align: baseline; }
+.field[data-key-path="body"] .lexical-root th { padding-block: .5rem; border-bottom: 1px solid var(--line); color: var(--muted); font-size: .875rem; font-weight: 400; letter-spacing: .09em; text-transform: uppercase; }
+.field[data-key-path="body"] .lexical-root tr:first-child > :is(th, td) { border-top: 0; }
+.field[data-key-path="body"] .lexical-root hr { margin: 3rem 0 0; }
+.field[data-key-path="body"] .lexical-root hr + * { margin-top: 3rem; }
+.field[data-key-path="body"] .lexical-root hr::after { height: 1px; background-color: var(--line); }
+/* An image in the text is edited in the CMS's own form, so it keeps the CMS's type. */
+.field[data-key-path="body"] .lexical-root .component { color: var(--sui-textbox-foreground-color); font-family: var(--sui-font-family-default); font-size: var(--sui-font-size-default); font-style: normal; line-height: 1.5; letter-spacing: normal; word-break: normal; }
+
+/* On a phone the CMS runs the editor to the screen's edges, and also down over the hint below it. */
+@media (width < 768px) {
+  .field[data-key-path="body"] .field-wrapper .sui.text-editor { margin-bottom: 0; }
+  .field[data-key-path="body"] .text-editor > .text-area .clone { border-width: 0; } /* as the CMS sets its textarea there */
+  .field[data-key-path="body"] .lexical-root { padding: 1.5rem 1.25rem 2rem; }
+}
+
+/* A post in Korean (언어: 한국어), as the site sets its words: lines break between words, untracked, and the
+   third-level headings upright in the accent color. Lexical sets word-break on the editor itself, so the
+   blocks in it take keep-all instead; a textarea and the copy behind it take it together. */
+body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) :is(.field[data-key-path="title"] .text-input, .field[data-key-path="summary"] .text-area, .field[data-key-path="body"] .text-editor > .text-area) { --sui-textbox-letter-spacing: 0; }
+body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) :is(.field[data-key-path="title"] input, .field[data-key-path="summary"] :is(textarea, .clone), .field[data-key-path="body"] .text-area :is(textarea, .clone), .field[data-key-path="body"] .lexical-root > :not(.code-block)) { word-break: keep-all; }
+body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) .field[data-key-path="body"] .lexical-root > :is(h1, h2) { line-height: 1.3; letter-spacing: 0; }
+body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) .field[data-key-path="body"] .lexical-root > :is(h3, h4, h5, h6) { font-style: normal; color: var(--accent); }
