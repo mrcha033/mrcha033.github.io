@@ -12,21 +12,27 @@
 </head>
 <body>
 <!-- Sveltia CMS, pinned to one release and checked against its hash, since the page holds a token that
-     can write to the repository. The import map checks the modules it loads on every visit (Immutable and
-     React DOM, for the preview in preview.js) the same way. Modules it fetches only on demand, such as code
-     highlighting or the WebP encoder Safari uses for uploads, are pinned by version but not hash-checked.
-     The one module they ask for by a version range, wasm-feature-detect (the encoder's), is pinned and
-     hash-checked here. It reads config.yml beside this page. README.md explains updating all of these. -->
+     can write to the repository. The import map checks the rest of the CMS the same way: every file in its
+     chunks/ folder (React DOM, for the preview in preview.js, among them; they come last, as README.md's
+     command prints them), Immutable, which it loads on every visit, and the code highlighter's engine,
+     which it loads for a post with a code block or in Markdown mode. Modules it fetches only on demand,
+     such as a language's grammar for code highlighting or the WebP encoder Safari uses for uploads, are
+     pinned by version but not hash-checked. The one module they ask for by a version range,
+     wasm-feature-detect (the encoder's), is pinned and hash-checked here. It reads config.yml beside this
+     page. README.md explains updating all of these. -->
 <script type="importmap">{"imports":{
 "https://unpkg.com/wasm-feature-detect@^1.2.11?module":"https://unpkg.com/wasm-feature-detect@1.9.0/dist/esm/index.js"},
 "integrity":{
 "https://unpkg.com/wasm-feature-detect@1.9.0/dist/esm/index.js":"sha384-EtHCg/+Dco0FVaM35JGO0ZBmtatTCRAcBcH5EwjHl5hG+NCjmShJ0aYddFme0pR7",
 "https://unpkg.com/immutable@5.1.9/dist/immutable.es.js":"sha384-ibYUKr6i/E1e4p7cim9iKSrvWWJYtf2flSwvjeMhBJ26BByGmRONB6Ql0qq88uXE",
-"https://unpkg.com/@sveltia/cms@0.237.0/dist/chunks/react-dom.js":"sha384-qsTGEkM1hblA3IVjbwq8ygZBI5fHj31ZMtD4Wmmft94n7sNad3Kelj3cLx90CSv+",
-"https://unpkg.com/@sveltia/cms@0.237.0/dist/chunks/assets/rolldown-runtime-B0Z9INg1.js":"sha384-uCuhBG6DIdgAvOeNaFe37hWRQ7YJZ6dBCRh7fRkwAfxJ9ECb9VDCyPGWWpcYRG7L"}}</script>
-<script src="https://unpkg.com/@sveltia/cms@0.237.0/dist/sveltia-cms.js" integrity="sha384-Bxt854HbLs2oIarLZ5ugq0+YaKn0gMREbBo9F6+z58nArGKhH7V3UBVsMiMBRH9B" crossorigin="anonymous"></script>
+"https://unpkg.com/@sveltia/ui@0.86.0/dist/shiki-engine.js":"sha384-FMKlp4dG3Pru/hPXHPba8dGn/YRcPWEU1ZKT47w011Eha/QQbmZuLBjnEbZDixAT",
+"https://unpkg.com/@sveltia/cms@0.245.1/dist/chunks/git.js":"sha384-pEwZo43imvzJK+YFMEV5tHlpNw9sW1vUTslNGQIgOmdOp101pWeQIm/MyxBJsiK5",
+"https://unpkg.com/@sveltia/cms@0.245.1/dist/chunks/qrcode.js":"sha384-9w1C554L4vodLRAQmU7nL6SXWgxIEFosuE0+oCEWBHR3tMLvfc0shslTKef4pqfM",
+"https://unpkg.com/@sveltia/cms@0.245.1/dist/chunks/react-dom.js":"sha384-mSi1r441eNUT/KSYyjfcuqXH0/xEPCHUoNTck87dia4O1PPbzNqij5l2LP6kz+1m",
+"https://unpkg.com/@sveltia/cms@0.245.1/dist/chunks/assets/rolldown-runtime-BWaJ3C7D.js":"sha384-7vIF446a/nrkmdkbG0UCqpzxmr7dgn1ps98x83+CaZwONmApQ95h/8JwScU4qcK8"}}</script>
+<script src="https://unpkg.com/@sveltia/cms@0.245.1/dist/sveltia-cms.js" integrity="sha384-WtLM0kE6Istn0n75BQVe+QHHleDS926pjdktjJ16OITlVqpJFAiD69ErfPcwrBvB" crossorigin="anonymous"></script>
 <script src="/admin/preview.js"></script>
-<!-- Keeps bold before a Korean particle (**"가을"**이라는) bold when a post is saved again; see the file. -->
+<!-- Keeps bold before a Korean particle (**"가을"**이라는) bold when a post is saved again, and in the preview; see the file. -->
 <script src="/admin/editor.js"></script>
 </body>
 </html>

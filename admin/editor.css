@@ -37,8 +37,9 @@
   --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='g' x='0' y='0' width='1' height='1' color-interpolation-filters='sRGB'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' seed='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0.18 0 0 0 -0.090'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23g)'/%3E%3C/svg%3E");
 }
 
-/* The title and summary, as the article's title and lede read, and the text in Markdown mode in the
-   site's code type */
+/* The title and summary, as the article's title and lede read, and the text in Markdown mode in the same
+   serif, smaller. (In the site's code type, Markdown mode's textarea and the copy drawn behind it fell out
+   of step in places, so a click could land off the text.) */
 :is(.field[data-key-path="title"] .text-input, .field[data-key-path="summary"] .text-area, .field[data-key-path="body"] .text-editor > .text-area) {
   --sui-textbox-foreground-color: var(--ink);
   --sui-textbox-background-color: var(--paper);
@@ -46,7 +47,7 @@
 }
 .field[data-key-path="title"] .text-input { --sui-textbox-font-size: 1.75rem; --sui-textbox-height: auto; --sui-textbox-singleline-line-height: 1.25; --sui-textbox-singleline-padding: .35em .5em; --sui-textbox-letter-spacing: -.02em; }
 .field[data-key-path="summary"] .text-area { --sui-textbox-font-size: 1.25rem; --sui-textbox-multiline-line-height: 1.5; }
-.field[data-key-path="body"] .text-editor > .text-area { --sui-textbox-font-family: var(--mono); --sui-textbox-font-size: .9375rem; --sui-textbox-multiline-line-height: 1.6; }
+.field[data-key-path="body"] .text-editor > .text-area { --sui-textbox-font-size: .9375rem; --sui-textbox-multiline-line-height: 1.6; }
 /* Paper grain on whichever layer shows: the box itself, or the copy behind Markdown mode's clear textarea */
 :is(.field[data-key-path="title"] input, .field[data-key-path="summary"] textarea, .field[data-key-path="body"] .text-area .clone) { background-image: var(--grain); }
 
@@ -60,7 +61,6 @@
   font-size: 1.125rem;
   line-height: 1.7;
   overflow-wrap: break-word;
-  font-synthesis-style: none; /* P052 has an italic; Korean, which has none, stays upright */
 }
 .field[data-key-path="body"] .lexical-root ::selection { background: var(--selection); color: var(--ink); }
 .field[data-key-path="body"] .lexical-root > * { margin: 0; }
@@ -103,9 +103,10 @@
 }
 
 /* A post in Korean (언어: 한국어), as the site sets its words: lines break between words, untracked, and the
-   third-level headings upright in the accent color. Lexical sets word-break on the editor itself, so the
-   blocks in it take keep-all instead; a textarea and the copy behind it take it together. */
+   third-level headings upright in the accent color. Lexical sets word-break on the editor itself, and the
+   CMS on the paragraphs in table cells, so the blocks and those paragraphs take keep-all instead; a textarea
+   and the copy behind it take it together. */
 body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) :is(.field[data-key-path="title"] .text-input, .field[data-key-path="summary"] .text-area, .field[data-key-path="body"] .text-editor > .text-area) { --sui-textbox-letter-spacing: 0; }
-body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) :is(.field[data-key-path="title"] input, .field[data-key-path="summary"] :is(textarea, .clone), .field[data-key-path="body"] .text-area :is(textarea, .clone), .field[data-key-path="body"] .lexical-root > :not(.code-block)) { word-break: keep-all; }
+body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) :is(.field[data-key-path="title"] input, .field[data-key-path="summary"] :is(textarea, .clone), .field[data-key-path="body"] .text-area :is(textarea, .clone), .field[data-key-path="body"] .lexical-root > :not(.code-block), .field[data-key-path="body"] .lexical-root :is(th, td) > p) { word-break: keep-all; }
 body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) .field[data-key-path="body"] .lexical-root > :is(h1, h2) { line-height: 1.3; letter-spacing: 0; }
 body:has(.field[data-key-path="lang"] [role="radio"][data-value="ko"][aria-checked="true"]) .field[data-key-path="body"] .lexical-root > :is(h3, h4, h5, h6) { font-style: normal; color: var(--accent); }
