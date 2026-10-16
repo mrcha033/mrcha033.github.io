@@ -460,6 +460,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .plate-image { display: block; padding: var(--space-5) var(--space-6); border: 1px solid var(--line); outline: 1px solid var(--line); outline-offset: -.4375rem; background: var(--grain), var(--paper-deep); }
 .plate-image img { display: block; width: 100%; height: auto; transition: transform .6s var(--ease); }
 @media (hover: hover) { a.plate-image:hover img { transform: scale(1.015); } }
+a.plate-image:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 .plate-figure figcaption { margin-top: var(--space-3); font-size: var(--step-meta); line-height: 1.55; color: var(--muted); }
 .plate-figure .fig-no { margin-right: var(--space-2); }
 /* hw-codesign's loop: three steps strung on one rule, like a flow drawn in the margin. */
@@ -539,6 +540,8 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .filter:hover:not([aria-pressed="true"]) { background: var(--paper-deep); }
 .search-box { display: flex; align-items: center; gap: var(--space-3); min-width: 14rem; padding-block: var(--space-2); border-bottom: 1px solid var(--muted); }
 .search-box input { width: 100%; border: 0; background: transparent; font-size: var(--step-ui); outline-offset: var(--space-2); }
+/* Korean typed into the search box is set in the reader's own Korean font, not partly in the page's subset. */
+.search-box input { font-family: Scholar, Palatino, 'Palatino Linotype', 'Book Antiqua', Georgia, 'Noto Serif KR', 'Noto Serif CJK KR', AppleMyungjo, 'Nanum Myeongjo', Batang, serif; }
 .journal-count { margin-bottom: var(--space-4); font-size: var(--step-meta); color: var(--muted); }
 /* Each piece is a row of the site's grid: its date and kind beside the title's first baseline. */
 .journal-card { position: relative; display: grid; grid-template-columns: var(--grid); align-items: baseline; gap: var(--space-3) var(--space-6); padding-block: var(--space-6); border-top: 1px solid var(--line); }
@@ -576,14 +579,20 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 /* List markers hang in the gutter, as on the research page, so the text keeps its edge. */
 .article-body :is(ul, ol) { margin-bottom: 0; padding-left: 0; }
 .article-body li + li, .article-body li > :is(ul, ol) { margin-top: var(--space-2); }
+.article-body li > :not(:first-child):is(p, pre, blockquote, div) { margin-top: var(--space-3); } /* a list item of several paragraphs */
 .article-body li :is(ul, ol) { padding-left: 1.25em; }
 .article-body li::marker { color: var(--accent); }
 .article-body blockquote > * + * { margin-top: var(--space-3); }
-.article-body hr { height: 0; margin-block: var(--space-7) 0; border: 0; border-top: 1px solid var(--line); }
+.article-body blockquote > :is(ul, ol) { padding-left: calc(var(--space-5) + 2px); } /* inside a quotation, markers stay clear of its rule */
+.article-body hr { height: 0; margin: var(--space-7) 0 0; border: 0; border-top: 1px solid var(--line); }
 .article-body hr + * { margin-top: var(--space-7); }
 .article-body img { max-width: 100%; height: auto; }
 /* A tall photo is held to the screen's height and centered on its plate. */
 .post-figure img { max-height: 80vh; object-fit: contain; }
+/* An image narrower than the plate keeps its own size (build.py caps it), centered, rather than being
+   enlarged; one without known dimensions, such as an SVG, is held to its own size too. */
+.post-figure img { margin-inline: auto; }
+.post-figure img:not([width]) { width: auto; max-width: 100%; }
 .article-body .formula { padding: var(--space-5) var(--space-4); border-block: 1px solid var(--line); font-size: var(--step-lede); text-align: center; overflow-x: auto; }
 .article-body blockquote { padding-left: var(--space-5); border-left: 2px solid var(--accent); font-size: var(--step-lede); line-height: 1.45; }
 .article-body .note-aside { padding-top: var(--space-4); border-top: 1px solid var(--line); font-size: var(--step-ui); color: var(--muted); }
@@ -593,8 +602,17 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 .article-facts { padding: var(--space-4) var(--space-5); border: 1px solid var(--line); background: var(--grain), var(--paper-deep); font-size: var(--step-ui); line-height: 1.5; }
 .article-facts div + div { margin-top: var(--space-3); }
 .article-facts dt { font-size: var(--step-meta); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--muted); }
-.article-body code { font-family: var(--mono); font-size: .9em; -webkit-text-stroke: .02em currentColor; }
+:is(.article-body, .article-heading, .article-facts, .journal-card) code { font-family: var(--mono); font-size: .9em; -webkit-text-stroke: .02em currentColor; }
+.article-facts code { overflow-wrap: anywhere; } /* a fact's narrow card */
 .article-body :not(pre) > code { white-space: nowrap; }
+.article-body .article-next-title code { white-space: normal; } /* as in the title it repeats */
+/* A long name or command (build.py marks one of 25 characters or more) and a long address break rather
+   than widen the page; on a phone any code may (below). In a table, which scrolls in its wrapper, they
+   stay whole. */
+.article-body code.long { white-space: normal; overflow-wrap: anywhere; }
+.article-body .inline-link { overflow-wrap: anywhere; }
+.article-body .table-wrap code { white-space: nowrap; overflow-wrap: normal; }
+.article-body .table-wrap .inline-link { overflow-wrap: normal; }
 .article-body pre { padding: var(--space-4) var(--space-5); border-left: 2px solid var(--line-strong); background: var(--grain), var(--paper-deep); font-size: var(--step-ui); line-height: 1.55; overflow-x: auto; }
 .article-body pre code { font-size: 1em; }
 .table-wrap { overflow-x: auto; }
@@ -735,6 +753,9 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
 /* Responsive */
 
 @media (max-width: 64rem) {
+  /* A name too long for a title's line, as code or not, breaks rather than widening the page; on a wide
+     screen it may run past the title's measure instead. */
+  :is(.article-heading h1, .article-heading .lede, .journal-card h2, .journal-card h2 + p, .article-next-title) { min-width: 0; overflow-wrap: break-word; }
   .story { column-gap: var(--space-6); }
   /* Below this width a third is too narrow for a title, so titles sit above their content. */
   :root { --grid: minmax(0, 1fr); }
@@ -786,6 +807,7 @@ p:not(.link-row) > .text-link { padding-top: 5px; }
   .leader { display: none; }
   .pipeline li { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .article-body pre { font-size: var(--step-meta); }
+  :is(.article-body, .article-heading, .journal-card) :not(pre) > code { white-space: normal; overflow-wrap: anywhere; } /* Korean or a quote can push short code past the column */
   .plate-image { padding: var(--space-4); }
   .footer-main { flex-direction: column; align-items: flex-start; }
   .footer-bottom { flex-direction: column; align-items: stretch; }

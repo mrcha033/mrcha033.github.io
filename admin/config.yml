@@ -19,7 +19,8 @@ logo:
   src: /assets/favicon.svg
 
 # An uploaded photo is saved as WebP, at most 2000 pixels on a side. Converting it also drops the
-# metadata a camera stores, such as where the photo was taken; build.py strips it from any other file.
+# metadata a camera stores, such as where the photo was taken. build.py cuts it out of JPEG, PNG, WebP,
+# GIF, and SVG files added by hand, and refuses other kinds of file.
 media_folder: content/writing/media
 public_folder: /assets/writing
 media_libraries:
@@ -53,7 +54,11 @@ collections:
       - { label: Note, field: category, pattern: '^Note$' }
       - { label: Case study, field: category, pattern: '^Case study$' }
     fields:
-      - { name: title, label: 제목, widget: string }
+      # A title that starts with a period would make a hidden file, which the admin page could not list.
+      - name: title
+        label: 제목
+        widget: string
+        pattern: ['^[\s!-\-/:-@\[-^`{-}]*[^.\s!-\-/:-@\[-^`{-}]', '마침표로 시작하는 제목은 주소(파일 이름)가 될 수 없습니다. 말줄임표는 …로 쓰세요.']
       - { name: date, label: 날짜, widget: datetime, type: date, default: '{{now}}' }
       - name: category
         label: 분류
@@ -91,4 +96,4 @@ collections:
       - name: body
         label: 본문
         widget: richtext
-        hint: 사진은 이미지 버튼으로 올립니다. 대체 텍스트(alt)는 사진을 설명하고, 제목(title)을 적으면 사진 아래 캡션이 됩니다. 표나 코드가 많은 글은 Markdown 모드가 편합니다.
+        hint: 사진은 이미지 버튼으로 올립니다. 대체 텍스트(alt)는 사진을 설명하고, 제목(title)을 적으면 사진 아래 캡션이 됩니다. 표나 HTML이 들어간 글(사례 글 등)은 툴바 오른쪽 끝의 Markdown 모드로 고쳐야 표의 정렬과 수식이 그대로 남습니다.
