@@ -602,7 +602,7 @@ a.plate-image:focus-visible { outline: 2px solid var(--accent); outline-offset: 
 .article-facts { padding: var(--space-4) var(--space-5); border: 1px solid var(--line); background: var(--grain), var(--paper-deep); font-size: var(--step-ui); line-height: 1.5; }
 .article-facts div + div { margin-top: var(--space-3); }
 .article-facts dt { font-size: var(--step-meta); letter-spacing: var(--track-caps); text-transform: uppercase; color: var(--muted); }
-:is(.article-body, .article-heading, .article-facts, .journal-card) code { font-family: var(--mono); font-size: .9em; -webkit-text-stroke: .02em currentColor; }
+:is(.article-body, .article-heading, .article-facts, .journal-card, .oss-block, .oss-body) code { font-family: var(--mono); font-size: .9em; -webkit-text-stroke: .02em currentColor; }
 .article-facts code { overflow-wrap: anywhere; } /* a fact's narrow card */
 .article-body :not(pre) > code { white-space: nowrap; }
 .article-body .article-next-title code { white-space: normal; } /* as in the title it repeats */
@@ -807,7 +807,7 @@ a.plate-image:focus-visible { outline: 2px solid var(--accent); outline-offset: 
   .leader { display: none; }
   .pipeline li { grid-template-columns: minmax(0, 1fr); gap: 0; }
   .article-body pre { font-size: var(--step-meta); }
-  :is(.article-body, .article-heading, .journal-card) :not(pre) > code { white-space: normal; overflow-wrap: anywhere; } /* Korean or a quote can push short code past the column */
+  :is(.article-body, .article-heading, .journal-card, .oss-block) :not(pre) > code { white-space: normal; overflow-wrap: anywhere; } /* Korean or a quote can push short code past the column */
   .plate-image { padding: var(--space-4); }
   .footer-main { flex-direction: column; align-items: flex-start; }
   .footer-bottom { flex-direction: column; align-items: stretch; }
