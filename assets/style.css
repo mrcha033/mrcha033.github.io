@@ -859,6 +859,10 @@ a.plate-image:focus-visible { outline: 2px solid var(--accent); outline-offset: 
 
 /* Print */
 
+/* A4 with 10 mm margins, which the CV's printed layout is measured for. Left to the browser's own
+   default, a page printed from a machine whose margins differ would set the CV on more paper. */
+@page { margin: 10mm; }
+
 @media print {
   /* Paper keeps the same levels, set in points. */
   :root {
@@ -870,11 +874,15 @@ a.plate-image:focus-visible { outline: 2px solid var(--accent); outline-offset: 
   .wrap { width: 100%; }
   .story-figure { position: static; height: auto; }
   .stack, .stack * { animation: none !important; } /* print the figure at rest, even if it never scrolled into view */
-  .page-intro { padding: 0 0 12pt; }
+  .page-intro { padding: 0 0 10pt; }
   .cv-contact { display: block; margin-top: 6pt; font-size: var(--step-ui); color: var(--muted); }
-  .cv-section { padding-block: 12pt; }
+  /* The CV is set to end on the third A4 page. A section stays on one page, and its heading moves
+     with it, so no page ends on a heading with its entries overleaf or on half a list. */
+  .cv-section { padding-block: 10pt; break-inside: avoid; }
   .cv-section:last-child { padding-bottom: 0; }
   .cv-item { break-inside: avoid; }
+  .cv-item + .cv-item { margin-top: 12pt; }
+  .cv-intro { margin-bottom: 12pt; }
   .cv-section > h2 { break-after: avoid; }
   .cv-link:not(.link-row) { display: none; }
   .reveal.ready { opacity: 1; transform: none; }
